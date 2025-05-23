@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -262,27 +263,32 @@ Sidebar.displayName = "Sidebar"
 const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar()
+>(({ className, onClick, children, asChild, ...props }, ref) => {
+  const { toggleSidebar } = useSidebar();
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7", className)}
+      variant={asChild ? undefined : "ghost"}
+      size={asChild ? undefined : "icon"}
+      className={cn(!asChild && "h-7 w-7", className)}
       onClick={(event) => {
-        onClick?.(event)
-        toggleSidebar()
+        onClick?.(event);
+        toggleSidebar();
       }}
+      asChild={asChild}
       {...props}
     >
-      <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      {asChild ? children : (
+        <>
+          <PanelLeft />
+          <span className="sr-only">Toggle Sidebar</span>
+        </>
+      )}
     </Button>
-  )
-})
+  );
+});
 SidebarTrigger.displayName = "SidebarTrigger"
 
 const SidebarRail = React.forwardRef<
@@ -549,6 +555,7 @@ const SidebarMenuButton = React.forwardRef<
       size = "default",
       tooltip,
       className,
+      children, // Explicitly destructured
       ...props
     },
     ref
@@ -556,19 +563,21 @@ const SidebarMenuButton = React.forwardRef<
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
 
-    const button = (
+    const buttonElement = ( // Renamed for clarity, this is the core element
       <Comp
         ref={ref}
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      />
+        {...props} // Pass other props, EXCLUDING asChild and children which are handled
+      >
+        {children} {/* Pass the explicitly destructured children here */}
+      </Comp>
     )
 
     if (!tooltip) {
-      return button
+      return buttonElement
     }
 
     if (typeof tooltip === "string") {
@@ -579,7 +588,7 @@ const SidebarMenuButton = React.forwardRef<
 
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
@@ -761,3 +770,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
