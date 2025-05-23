@@ -73,9 +73,10 @@ export default function RootLayout({
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
               <SidebarTrigger asChild>
                 <Button variant="outline" size="icon" className="shrink-0">
-                  {/* Single child of Button, handles layout and content */}
+                  {/* This outer span is the single child of Button */}
                   <span className="flex items-center justify-center">
-                    <PanelLeft className="h-5 w-5" />
+                    {/* Wrap PanelLeft in its own span */}
+                    <span><PanelLeft className="h-5 w-5" /></span>
                     <span className="sr-only">切换侧边栏</span>
                   </span>
                 </Button>
