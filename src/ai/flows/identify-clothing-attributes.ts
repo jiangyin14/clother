@@ -25,7 +25,7 @@ export type IdentifyClothingAttributesInput = z.infer<
 const IdentifyClothingAttributesOutputSchema = z.object({
   attributes: z
     .array(z.string())
-    .describe('List of attributes identified in the clothing item.'),
+    .describe('List of attributes identified in the clothing item, in Chinese.'),
 });
 export type IdentifyClothingAttributesOutput = z.infer<
   typeof IdentifyClothingAttributesOutputSchema
@@ -41,11 +41,11 @@ const identifyClothingAttributesPrompt = ai.definePrompt({
   name: 'identifyClothingAttributesPrompt',
   input: {schema: IdentifyClothingAttributesInputSchema},
   output: {schema: IdentifyClothingAttributesOutputSchema},
-  prompt: `You are an AI fashion assistant.  Please identify the attributes of the clothing in the image.
+  prompt: `你是一个AI时尚助手。请识别图片中衣物的属性。
 
-  Here is the image of the clothing: {{media url=photoDataUri}}
-  The output should be a list of attributes.  Examples of attributes include "red", "cotton", "casual", "dress", etc.
-  Return the attributes as a JSON array.
+  这是衣物的图片: {{media url=photoDataUri}}
+  输出应为一个属性列表。属性的例子包括 "红色", "棉布", "休闲", "连衣裙", 等。
+  请以JSON数组的形式返回中文属性。
   `,
 });
 

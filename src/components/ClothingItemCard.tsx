@@ -36,7 +36,7 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
           />
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground font-medium">Attributes:</p>
+          <p className="text-xs text-muted-foreground font-medium">属性：</p>
           <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
             {item.attributes.length > 0 ? (
               item.attributes.map((attr, index) => (
@@ -45,7 +45,7 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
                 </Badge>
               ))
             ) : (
-              <p className="text-xs text-muted-foreground italic">No attributes identified.</p>
+              <p className="text-xs text-muted-foreground italic">未识别到属性。</p>
             )}
           </div>
         </div>
@@ -53,13 +53,13 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
       <CardFooter className="p-4 border-t">
         {showAddButton && onAdd && (
           <Button onClick={() => onAdd(item)} size="sm" className="w-full">
-            Add to My Closet
+            添加到我的衣橱
           </Button>
         )}
         {!showAddButton && onRemove && (
           <Button onClick={() => onRemove(item.id)} variant="outline" size="sm" className="w-full text-destructive hover:bg-destructive/10 border-destructive/50 hover:text-destructive">
             <Trash2 size={16} className="mr-2" />
-            Remove
+            移除
           </Button>
         )}
       </CardFooter>

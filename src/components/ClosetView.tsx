@@ -29,13 +29,13 @@ const ClosetView: React.FC<ClosetViewProps> = ({
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
-            <Archive className="text-primary" /> My Closet
+            <Archive className="text-primary" /> 我的衣橱
           </CardTitle>
-          <CardDescription>These are the items you've uploaded or added. They will be used for recommendations.</CardDescription>
+          <CardDescription>这是你已上传或添加的物品。它们将用于推荐。</CardDescription>
         </CardHeader>
         <CardContent>
           {myClosetItems.length === 0 ? (
-            <p className="text-muted-foreground italic text-center py-8">Your closet is empty. Upload some clothes or add from default items below!</p>
+            <p className="text-muted-foreground italic text-center py-8">你的衣橱是空的。上传一些衣物或从下面的默认物品中添加！</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {myClosetItems.map((item) => (
@@ -49,8 +49,8 @@ const ClosetView: React.FC<ClosetViewProps> = ({
       {availableDefaultItems.length > 0 && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl">Default Clothing Items</CardTitle>
-            <CardDescription>Quickly add these common items to your closet for matching.</CardDescription>
+            <CardTitle className="text-xl">默认衣物</CardTitle>
+            <CardDescription>快速将这些常见物品添加到你的衣橱以进行搭配。</CardDescription>
           </CardHeader>
           <CardContent>
              <ScrollArea className="w-full whitespace-nowrap rounded-md">

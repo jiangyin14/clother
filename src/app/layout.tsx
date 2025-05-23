@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '衣搭配 - Your Smart Fashion Assistant',
-  description: 'Smart clothing matching based on mood and weather.',
+  title: 'Clother (衣者) - 你的智能时尚助手',
+  description: '根据心情和天气智能搭配服装。',
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <Toaster />

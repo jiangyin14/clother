@@ -45,28 +45,28 @@ export default function Home() {
   const handleAddDefaultClothing = (itemToAdd: ClothingItem) => {
     if (!myClosetItems.find(item => item.id === itemToAdd.id)) {
       setMyClosetItems((prevItems) => [...prevItems, itemToAdd]);
-      toast({ title: "Item Added", description: `${itemToAdd.name} added to your closet.` });
+      toast({ title: "已添加物品", description: `${itemToAdd.name} 已添加到你的衣橱。` });
     } else {
-      toast({ title: "Already Added", description: `${itemToAdd.name} is already in your closet.`, variant: "default" });
+      toast({ title: "已存在", description: `${itemToAdd.name} 已在你的衣橱中。`, variant: "default" });
     }
   };
 
   const handleRemoveMyClothing = (idToRemove: string) => {
     setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
-    toast({ title: "Item Removed", description: "The item has been removed from your closet." });
+    toast({ title: "已移除物品", description: "该物品已从你的衣橱中移除。" });
   };
 
   const handleGetRecommendation = async () => {
     if (!mood.trim()) {
-      toast({ title: "Missing Mood", description: "Please enter your current mood.", variant: "destructive" });
+      toast({ title: "缺少心情", description: "请输入你当前的心情。", variant: "destructive" });
       return;
     }
     if (!selectedWeather) {
-      toast({ title: "Missing Weather", description: "Please select the current weather.", variant: "destructive" });
+      toast({ title: "缺少天气", description: "请选择当前的天气。", variant: "destructive" });
       return;
     }
     if (myClosetItems.length === 0) {
-      toast({ title: "Empty Closet", description: "Please add some clothing items to your closet first.", variant: "destructive" });
+      toast({ title: "衣橱为空", description: "请先添加一些衣物到你的衣橱。", variant: "destructive" });
       return;
     }
 
@@ -78,11 +78,11 @@ export default function Home() {
     try {
       const result = await handleGetRecommendationAction(mood, selectedWeather, allAttributes);
       setRecommendation(result.recommendedOutfit);
-      toast({ title: "Recommendation Ready!", description: "We've found an outfit for you." });
+      toast({ title: "推荐已准备好！", description: "我们为你找到了一套服装。" });
     } catch (error) {
       toast({
-        title: 'Error Getting Recommendation',
-        description: error instanceof Error ? error.message : 'An unknown error occurred.',
+        title: '获取推荐失败',
+        description: error instanceof Error ? error.message : '发生未知错误。',
         variant: 'destructive',
       });
       setRecommendation(null);
@@ -103,7 +103,7 @@ export default function Home() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 font-sans">
       <header className="mb-8 text-center">
         <AppLogo />
-        <p className="text-muted-foreground mt-2">Your personal AI fashion assistant.</p>
+        <p className="text-muted-foreground mt-2">你的私人 AI 时尚助手。</p>
       </header>
 
       <Separator className="my-8" />
@@ -137,12 +137,12 @@ export default function Home() {
             {isGettingRecommendation ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Finding Your Style...
+                正在为你寻找风格...
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-5 w-5" />
-                Get Outfit Recommendation
+                获取服装推荐
               </>
             )}
           </Button>
@@ -152,7 +152,7 @@ export default function Home() {
       </main>
       
       <footer className="mt-16 pt-8 border-t text-center text-muted-foreground text-sm">
-        <p>&copy; {new Date().getFullYear()} 衣搭配. Powered by AI.</p>
+        <p>&copy; {new Date().getFullYear()} Clother (衣者). 由 AI 驱动。</p>
       </footer>
     </div>
   );

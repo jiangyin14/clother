@@ -43,8 +43,8 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
   const handleSubmit = async () => {
     if (!imageDataUri) {
       toast({
-        title: 'No Image Selected',
-        description: 'Please select an image file to upload.',
+        title: '未选择图片',
+        description: '请选择要上传的图片文件。',
         variant: 'destructive',
       });
       return;
@@ -54,13 +54,13 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
     try {
       const result = await handleIdentifyAttributesAction(imageDataUri);
       onClothingAnalyzed({
-        name: fileName || 'Uploaded Item',
+        name: fileName || '上传的物品',
         imageUrl: imageDataUri,
         attributes: result.attributes,
       });
       toast({
-        title: 'Attributes Identified!',
-        description: `Found attributes: ${result.attributes.join(', ') || 'None'}`,
+        title: '属性已识别！',
+        description: `找到属性: ${result.attributes.join('、') || '无'}`,
       });
       // Reset form
       setImagePreview(null);
@@ -72,8 +72,8 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
 
     } catch (error) {
       toast({
-        title: 'Error Identifying Attributes',
-        description: error instanceof Error ? error.message : 'An unknown error occurred.',
+        title: '识别属性失败',
+        description: error instanceof Error ? error.message : '发生未知错误。',
         variant: 'destructive',
       });
     } finally {
@@ -85,13 +85,13 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <UploadCloud className="text-primary" /> Add New Clothing
+          <UploadCloud className="text-primary" /> 添加新衣物
         </CardTitle>
-        <CardDescription>Upload an image of your clothing item to analyze its attributes.</CardDescription>
+        <CardDescription>上传你的衣物图片以分析其属性。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="clothing-upload" className="mb-2 block text-sm font-medium">Clothing Image</Label>
+          <Label htmlFor="clothing-upload" className="mb-2 block text-sm font-medium">衣物图片</Label>
           <Input
             id="clothing-upload"
             type="file"
@@ -103,7 +103,7 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
 
         {imagePreview && (
           <div className="mt-4 p-2 border rounded-md bg-muted/50 flex justify-center">
-            <Image src={imagePreview} alt="Image preview" width={200} height={200} className="rounded-md object-contain max-h-[200px]" data-ai-hint="clothing preview" />
+            <Image src={imagePreview} alt="图片预览" width={200} height={200} className="rounded-md object-contain max-h-[200px]" data-ai-hint="clothing preview" />
           </div>
         )}
 
@@ -111,10 +111,10 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing...
+              分析中...
             </>
           ) : (
-            'Analyze Clothing Item'
+            '分析衣物'
           )}
         </Button>
       </CardContent>

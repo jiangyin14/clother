@@ -15,9 +15,9 @@ const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({ recommend
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <Lightbulb className="text-primary" /> Outfit Recommendation
+          <Lightbulb className="text-primary" /> 服装推荐
         </CardTitle>
-        <CardDescription>Here's what we suggest based on your input.</CardDescription>
+        <CardDescription>这是我们根据你的输入给出的建议。</CardDescription>
       </CardHeader>
       <CardContent className="min-h-[100px]">
         {isLoading ? (
@@ -31,8 +31,8 @@ const RecommendationDisplay: React.FC<RecommendationDisplayProps> = ({ recommend
         ) : (
           <div className="flex flex-col items-center justify-center text-muted-foreground italic py-6 space-y-2">
             <Shirt size={32} />
-            <p>Your outfit recommendation will appear here once generated.</p>
-            <p className="text-xs">Make sure you've added clothes, set your mood, and selected the weather.</p>
+            <p>你的服装推荐将在生成后显示在这里。</p>
+            <p className="text-xs">请确保你已添加衣物、设置心情并选择天气。</p>
           </div>
         )}
       </CardContent>

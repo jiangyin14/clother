@@ -12,7 +12,7 @@ export async function handleIdentifyAttributesAction(
     return result;
   } catch (error) {
     console.error('Error identifying clothing attributes:', error);
-    throw new Error('Failed to identify clothing attributes. Please try again.');
+    throw new Error('识别衣物属性失败，请重试。');
   }
 }
 
@@ -22,7 +22,7 @@ export async function handleGetRecommendationAction(
   clothingKeywords: string[]
 ): Promise<RecommendClothingOutput> {
   if (!moodKeywords || !weatherInformation || clothingKeywords.length === 0) {
-    throw new Error('Mood, weather, and at least one clothing item are required for recommendations.');
+    throw new Error('心情、天气和至少一件衣物是获取推荐所必需的。');
   }
   try {
     const result = await recommendClothing({
@@ -34,6 +34,6 @@ export async function handleGetRecommendationAction(
   } catch (error)
    {
     console.error('Error getting recommendation:', error);
-    throw new Error('Failed to get recommendation. Please try again.');
+    throw new Error('获取推荐失败，请重试。');
   }
 }
