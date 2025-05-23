@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { ClothingItem } from '@/lib/definitions';
-import { DEFAULT_CLOTHING_ITEMS, WEATHER_OPTIONS } from '@/lib/constants';
+import { DEFAULT_CLOTHING_ITEMS, WEATHER_OPTIONS, MOOD_OPTIONS } from '@/lib/constants';
 import { handleGetRecommendationAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +17,7 @@ import { Loader2, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
-  const [mood, setMood] = useState<string>('');
+  const [selectedMoods, setSelectedMoods] = useState<string[]>([]); // Changed from string to string[]
   const [selectedWeather, setSelectedWeather] = useState<string>(WEATHER_OPTIONS[0]?.value || '');
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
@@ -57,8 +57,8 @@ export default function Home() {
   };
 
   const handleGetRecommendation = async () => {
-    if (!mood.trim()) {
-      toast({ title: "缺少心情", description: "请输入你当前的心情。", variant: "destructive" });
+    if (selectedMoods.length === 0) { // Changed condition
+      toast({ title: "缺少心情", description: "请选择你当前的心情。", variant: "destructive" });
       return;
     }
     if (!selectedWeather) {
@@ -74,9 +74,10 @@ export default function Home() {
     setRecommendation(null); // Clear previous recommendation
 
     const allAttributes = Array.from(new Set(myClosetItems.flatMap(item => item.attributes)));
+    const moodKeywordsString = selectedMoods.join(', '); // Join moods into a string
 
     try {
-      const result = await handleGetRecommendationAction(mood, selectedWeather, allAttributes);
+      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes);
       setRecommendation(result.recommendedOutfit);
       toast({ title: "推荐已准备好！", description: "我们为你找到了一套服装。" });
     } catch (error) {
@@ -121,16 +122,17 @@ export default function Home() {
 
         <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-8 self-start">
           <MoodWeatherInput
-            mood={mood}
-            onMoodChange={setMood}
+            selectedMoods={selectedMoods} // Changed prop name
+            onMoodSelectionChange={setSelectedMoods} // Changed prop name
             selectedWeather={selectedWeather}
             onWeatherChange={setSelectedWeather}
             weatherOptions={WEATHER_OPTIONS}
+            moodOptions={MOOD_OPTIONS} // Pass mood options
           />
           
           <Button 
             onClick={handleGetRecommendation} 
-            disabled={isGettingRecommendation || myClosetItems.length === 0 || !mood.trim() || !selectedWeather}
+            disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather} // Changed disabled condition
             className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
             size="lg"
           >

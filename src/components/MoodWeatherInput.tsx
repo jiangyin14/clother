@@ -1,28 +1,37 @@
 'use client';
 
 import React from 'react';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import type { WeatherOption } from '@/lib/definitions';
-import { Smile, Cloud } from 'lucide-react';
+import type { WeatherOption, MoodOption } from '@/lib/definitions';
+import { Cloud } from 'lucide-react'; // Smile icon removed as individual mood icons are used
 
 interface MoodWeatherInputProps {
-  mood: string;
-  onMoodChange: (mood: string) => void;
+  selectedMoods: string[];
+  onMoodSelectionChange: (moods: string[]) => void;
   selectedWeather: string;
   onWeatherChange: (weather: string) => void;
   weatherOptions: WeatherOption[];
+  moodOptions: MoodOption[];
 }
 
 const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
-  mood,
-  onMoodChange,
+  selectedMoods,
+  onMoodSelectionChange,
   selectedWeather,
   onWeatherChange,
   weatherOptions,
+  moodOptions,
 }) => {
+  const handleMoodButtonClick = (moodValue: string) => {
+    const newSelectedMoods = selectedMoods.includes(moodValue)
+      ? selectedMoods.filter((m) => m !== moodValue)
+      : [...selectedMoods, moodValue];
+    onMoodSelectionChange(newSelectedMoods);
+  };
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -31,18 +40,26 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="mood-input" className="flex items-center gap-2 font-medium">
-            <Smile size={18} className="text-primary" />
+          <Label className="flex items-center gap-2 font-medium">
+            {/* Using a generic mood icon or removing it as specific icons are on buttons */}
+            {/* <Smile size={18} className="text-primary" /> */}
             你当前的心情
           </Label>
-          <Input
-            id="mood-input"
-            type="text"
-            placeholder="例如：轻松、活力、正式"
-            value={mood}
-            onChange={(e) => onMoodChange(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">输入几个描述你心情的关键词。</p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {moodOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={selectedMoods.includes(option.value) ? 'default' : 'outline'}
+                onClick={() => handleMoodButtonClick(option.value)}
+                size="sm"
+                className="capitalize"
+              >
+                {option.icon && React.createElement(option.icon, { size: 16, className: "mr-1.5" })}
+                {option.label}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">选择一个或多个描述你心情的关键词。</p>
         </div>
 
         <div className="space-y-2">

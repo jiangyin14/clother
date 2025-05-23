@@ -1,5 +1,5 @@
-import type { ClothingItem, WeatherOption } from '@/lib/definitions';
-import { CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, ThermometerSnowflake, Wind } from 'lucide-react';
+import type { ClothingItem, WeatherOption, MoodOption } from '@/lib/definitions';
+import { CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, ThermometerSnowflake, Wind, Smile, Meh, Frown, Zap, Coffee } from 'lucide-react';
 
 export const DEFAULT_CLOTHING_ITEMS: ClothingItem[] = [
   {
@@ -48,4 +48,14 @@ export const WEATHER_OPTIONS: WeatherOption[] = [
   { value: 'Snowy and Cold', label: '下雪寒冷', icon: CloudSnow },
   { value: 'Thunderstorms', label: '雷暴', icon: CloudLightning },
   { value: 'Freezing Cold', label: '严寒', icon: ThermometerSnowflake },
+];
+
+export const MOOD_OPTIONS: MoodOption[] = [
+  { value: '开心', label: '开心', icon: Smile },
+  { value: '轻松', label: '轻松', icon: Coffee },
+  { value: '活力', label: '活力', icon: Zap },
+  { value: '平静', label: '平静', icon: Meh },
+  { value: '正式', label: '正式' },
+  { value: '休闲', label: '休闲' },
+  { value: '忧郁', label: '忧郁', icon: Frown },
 ];

@@ -11,3 +11,9 @@ export interface WeatherOption {
   label: string;
   icon?: React.ElementType;
 }
+
+export interface MoodOption {
+  value: string;
+  label: string;
+  icon?: React.ElementType; // Optional icon for moods
+}
