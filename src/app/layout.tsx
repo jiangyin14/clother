@@ -3,12 +3,12 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'; // Tooltip related imports removed as tooltip is part of SidebarMenuButton prop
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
 import { Home, Compass, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import React from 'react'; // Import React
+import React from 'react';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -41,23 +41,28 @@ export default function RootLayout({
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  {/* Use modern Link. SidebarMenuButton's Slot will pass props to Link, Link renders <a>. */}
                   <SidebarMenuButton asChild tooltip={{children: "推荐", side: "right", align: "center" }}>
-                    <Link href="/">
-                      <span className="flex items-center gap-2"> {/* This span is the content of the <a> rendered by Link */}
-                        <Home />
-                        <span>推荐</span>
-                      </span>
+                    <Link href="/" legacyBehavior passHref>
+                      <a>
+                        {/* Single child of <a>, handles layout and content */}
+                        <span className="flex items-center gap-2">
+                          <Home />
+                          <span>推荐</span>
+                        </span>
+                      </a>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip={{children: "探索", side: "right", align: "center" }}>
-                    <Link href="/explore">
-                      <span className="flex items-center gap-2"> {/* This span is the content of the <a> rendered by Link */}
-                        <Compass />
-                        <span>探索</span>
-                      </span>
+                    <Link href="/explore" legacyBehavior passHref>
+                      <a>
+                        {/* Single child of <a>, handles layout and content */}
+                        <span className="flex items-center gap-2">
+                           <Compass />
+                           <span>探索</span>
+                        </span>
+                      </a>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -68,10 +73,11 @@ export default function RootLayout({
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
               <SidebarTrigger asChild>
                 <Button variant="outline" size="icon" className="shrink-0">
-                  <>
+                  {/* Single child of Button, handles layout and content */}
+                  <span className="flex items-center justify-center">
                     <PanelLeft className="h-5 w-5" />
                     <span className="sr-only">切换侧边栏</span>
-                  </>
+                  </span>
                 </Button>
               </SidebarTrigger>
               <AppLogo />

@@ -540,8 +540,8 @@ const sidebarMenuButtonVariants = cva(
 )
 
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<"button"> & {
+  HTMLButtonElement, // The ref type should match the element being rendered or the element type of the child if asChild
+  React.ComponentProps<"button"> & { // Base props from button
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
@@ -551,49 +551,74 @@ const SidebarMenuButton = React.forwardRef<
     {
       asChild = false,
       isActive = false,
-      variant = "default",
-      size = "default",
+      variant, // Destructure variant and size to pass to cva
+      size,   // Destructure variant and size to pass to cva
       tooltip,
       className,
-      children, // Explicitly destructured
-      ...props
+      children,
+      ...props // Remaining props
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    const combinedClassName = cn(sidebarMenuButtonVariants({ variant, size, className }))
 
-    const buttonElement = ( // Renamed for clarity, this is the core element
-      <Comp
-        ref={ref}
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props} // Pass other props, EXCLUDING asChild and children which are handled
-      >
-        {children} {/* Pass the explicitly destructured children here */}
-      </Comp>
-    )
+    let triggerElement: React.ReactElement;
+
+    if (asChild) {
+      if (!React.isValidElement(children)) {
+        // In a real app, you might throw an error or log a warning
+        // For now, we'll just render a span, but this indicates incorrect usage
+        triggerElement = (
+          <span ref={ref as React.Ref<HTMLSpanElement>} className={combinedClassName} {...props}>
+            Error: asChild requires a valid React element child
+          </span>
+        );
+      } else {
+        // Clone the child (e.g., Link) and merge props
+        // The child is responsible for handling the ref if it's a component
+        triggerElement = React.cloneElement(children, {
+          // @ts-ignore if children is a DOM element, this works. If it's a component, it must accept ref.
+          ref: ref, 
+          className: cn(children.props.className, combinedClassName),
+          "data-active": isActive, // Ensure data-active is applied
+          "data-size": size, // Ensure data-size is applied
+          "data-sidebar": "menu-button", // Ensure data-sidebar is applied
+          // Spread other props. Ensure children's own props are not clobbered unless intended.
+          ...props, 
+          ...children.props, // children's props come last to ensure they can override if necessary (e.g. specific onClick)
+        });
+      }
+    } else {
+      // Not asChild, render a <button>
+      triggerElement = (
+        <button
+          ref={ref}
+          className={combinedClassName}
+          data-active={isActive}
+          data-size={size}
+          data-sidebar="menu-button"
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
 
     if (!tooltip) {
-      return buttonElement
+      return triggerElement;
     }
 
-    if (typeof tooltip === "string") {
-      tooltip = {
-        children: tooltip,
-      }
-    }
-
+    const tooltipContentProps = typeof tooltip === 'string' ? { children: tooltip } : tooltip;
+    
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{buttonElement}</TooltipTrigger>
+        <TooltipTrigger asChild>{triggerElement}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltip}
+          {...tooltipContentProps} // Spread the content props here
         />
       </Tooltip>
     )
@@ -770,4 +795,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
