@@ -1,13 +1,14 @@
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarInset, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'; // Tooltip related imports removed as tooltip is part of SidebarMenuButton prop
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
 import { Home, Compass, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import React from 'react'; // Import React for Fragment shorthand
+import React from 'react'; // Import React
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -40,22 +41,23 @@ export default function RootLayout({
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
+                  {/* Use modern Link. SidebarMenuButton's Slot will pass props to Link, Link renders <a>. */}
                   <SidebarMenuButton asChild tooltip={{children: "推荐", side: "right", align: "center" }}>
-                    <Link href="/" legacyBehavior passHref>
-                      <a className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>svg]:size-4 [&>svg]:shrink-0">
+                    <Link href="/">
+                      <span className="flex items-center gap-2"> {/* This span is the content of the <a> rendered by Link */}
                         <Home />
                         <span>推荐</span>
-                      </a>
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild tooltip={{children: "探索", side: "right", align: "center" }}>
-                    <Link href="/explore" legacyBehavior passHref>
-                       <a className="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>svg]:size-4 [&>svg]:shrink-0">
+                    <Link href="/explore">
+                      <span className="flex items-center gap-2"> {/* This span is the content of the <a> rendered by Link */}
                         <Compass />
                         <span>探索</span>
-                       </a>
+                      </span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
