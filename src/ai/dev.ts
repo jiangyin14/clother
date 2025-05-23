@@ -1,1 +1,5 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/identify-clothing-attributes.ts';
+import '@/ai/flows/recommend-clothing-based-on-mood-and-weather.ts';
