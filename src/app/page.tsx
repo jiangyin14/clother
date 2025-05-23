@@ -6,7 +6,7 @@ import { DEFAULT_CLOTHING_ITEMS, WEATHER_OPTIONS, MOOD_OPTIONS } from '@/lib/con
 import { handleGetRecommendationAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 
-import AppLogo from '@/components/AppLogo';
+// import AppLogo from '@/components/AppLogo'; // AppLogo is now in layout
 import ClothingUploadForm from '@/components/ClothingUploadForm';
 import ClosetView from '@/components/ClosetView';
 import MoodWeatherInput from '@/components/MoodWeatherInput';
@@ -14,21 +14,21 @@ import RecommendationDisplay from '@/components/RecommendationDisplay';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-export default function Home() {
+export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([]); // Changed from string to string[]
+  const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedWeather, setSelectedWeather] = useState<string>(WEATHER_OPTIONS[0]?.value || '');
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
 
-
   const { toast } = useToast();
 
   useEffect(() => {
     setClientLoaded(true);
-     // Optionally load some default items into "My Closet" on initial load
+    // Optionally load some default items into "My Closet" on initial load
     // setMyClosetItems(DEFAULT_CLOTHING_ITEMS.slice(0, 1));
   }, []);
 
@@ -57,7 +57,7 @@ export default function Home() {
   };
 
   const handleGetRecommendation = async () => {
-    if (selectedMoods.length === 0) { // Changed condition
+    if (selectedMoods.length === 0) {
       toast({ title: "缺少心情", description: "请选择你当前的心情。", variant: "destructive" });
       return;
     }
@@ -71,10 +71,10 @@ export default function Home() {
     }
 
     setIsGettingRecommendation(true);
-    setRecommendation(null); // Clear previous recommendation
+    setRecommendation(null); 
 
     const allAttributes = Array.from(new Set(myClosetItems.flatMap(item => item.attributes)));
-    const moodKeywordsString = selectedMoods.join(', '); // Join moods into a string
+    const moodKeywordsString = selectedMoods.join(', ');
 
     try {
       const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes);
@@ -94,23 +94,23 @@ export default function Home() {
   
   if (!clientLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 font-sans">
-      <header className="mb-8 text-center">
-        <AppLogo />
-        <p className="text-muted-foreground mt-2">你的私人 AI 时尚助手。</p>
+    <div className="container mx-auto font-sans">
+      <header className="mb-6 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">服装推荐</h1>
+        <p className="text-muted-foreground mt-1">根据你的衣橱、心情和天气获取个性化搭配建议。</p>
       </header>
 
-      <Separator className="my-8" />
+      <Separator className="my-6" />
 
-      <main className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="lg:col-span-1 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <ClothingUploadForm onClothingAnalyzed={handleClothingAnalyzed} />
           <ClosetView
             myClosetItems={myClosetItems}
@@ -120,40 +120,46 @@ export default function Home() {
           />
         </div>
 
-        <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-8 self-start">
-          <MoodWeatherInput
-            selectedMoods={selectedMoods} // Changed prop name
-            onMoodSelectionChange={setSelectedMoods} // Changed prop name
-            selectedWeather={selectedWeather}
-            onWeatherChange={setSelectedWeather}
-            weatherOptions={WEATHER_OPTIONS}
-            moodOptions={MOOD_OPTIONS} // Pass mood options
-          />
-          
-          <Button 
-            onClick={handleGetRecommendation} 
-            disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather} // Changed disabled condition
-            className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
-            size="lg"
-          >
-            {isGettingRecommendation ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                正在为你寻找风格...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                获取服装推荐
-              </>
-            )}
-          </Button>
-
+        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 self-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>搭配助手</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <MoodWeatherInput
+                selectedMoods={selectedMoods}
+                onMoodSelectionChange={setSelectedMoods}
+                selectedWeather={selectedWeather}
+                onWeatherChange={setSelectedWeather}
+                weatherOptions={WEATHER_OPTIONS}
+                moodOptions={MOOD_OPTIONS}
+              />
+              
+              <Button 
+                onClick={handleGetRecommendation} 
+                disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather}
+                className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
+                size="lg"
+              >
+                {isGettingRecommendation ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    正在为你寻找风格...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    获取服装推荐
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
           <RecommendationDisplay recommendation={recommendation} isLoading={isGettingRecommendation} />
         </div>
-      </main>
+      </div>
       
-      <footer className="mt-16 pt-8 border-t text-center text-muted-foreground text-sm">
+      <footer className="mt-12 pt-6 border-t text-center text-muted-foreground text-xs">
         <p>&copy; {new Date().getFullYear()} Clother (衣者). 由 AI 驱动。</p>
       </footer>
     </div>

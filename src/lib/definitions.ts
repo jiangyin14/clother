@@ -17,3 +17,10 @@ export interface MoodOption {
   label: string;
   icon?: React.ElementType; // Optional icon for moods
 }
+
+export interface ExplorableItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string; // e.g., 'Top', 'Accessory', 'Outerwear'
+}
