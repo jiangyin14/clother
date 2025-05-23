@@ -71,15 +71,14 @@ export default function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
-              <SidebarTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
-                  {/* This outer span is the single child of Button */}
-                  <span className="flex items-center justify-center">
-                    {/* Wrap PanelLeft in its own span */}
-                    <span><PanelLeft className="h-5 w-5" /></span>
-                    <span className="sr-only">切换侧边栏</span>
-                  </span>
-                </Button>
+              <SidebarTrigger>  {/* Remove asChild prop */}
+                <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md border border-input bg-background h-10 w-10 p-0 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground"
+                >
+                  <PanelLeft className="h-5 w-5" />
+                  <span className="sr-only">Toggle sidebar</span>
+                </button>
               </SidebarTrigger>
               <AppLogo />
             </header>

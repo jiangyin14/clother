@@ -9,8 +9,12 @@
  * - GenerateOutfitImageOutput - The return type for the generateOutfitImage function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'genkit'; // Keep z for schema validation
+import {
+  SILICONFLOW_API_KEY,
+  SILICONFLOW_API_BASE_URL,
+  SILICONFLOW_VL_MODEL // Using VL model as it might be used for image generation too
+} from '@/ai/genkit';
 
 const GenerateOutfitImageInputSchema = z.object({
   outfitDescription: z.string().describe('AI图像生成模型使用的详细服装描述 (中文)。'),
@@ -23,46 +27,63 @@ const GenerateOutfitImageOutputSchema = z.object({
 export type GenerateOutfitImageOutput = z.infer<typeof GenerateOutfitImageOutputSchema>;
 
 export async function generateOutfitImage(input: GenerateOutfitImageInput): Promise<GenerateOutfitImageOutput> {
-  return generateOutfitImageFlow(input);
-}
+  // Validate input using Zod schema
+  const validatedInput = GenerateOutfitImageInputSchema.parse(input);
 
-const generateOutfitImageFlow = ai.defineFlow(
-  {
-    name: 'generateOutfitImageFlow',
-    inputSchema: GenerateOutfitImageInputSchema,
-    outputSchema: GenerateOutfitImageOutputSchema,
-    // Enable for debugging if needed
-    // authPolicy: (auth, input) => {
-    //   if (!auth) {
-    //     throw new Error('Authorization required.');
-    //   }
-    // }
-  },
-  async (input) => {
-    const {media} = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-exp', // IMPORTANT: Use this specific model for image generation
-      prompt: `根据以下描述生成一张时尚服装模特图： ${input.outfitDescription}。请确保图片清晰、现代且美观。主要展现服装，模特姿势自然。`,
-      config: {
-        responseModalities: ['IMAGE', 'TEXT'], // MUST provide both TEXT and IMAGE
-        // Loosen safety settings slightly for creative generation, but be mindful of policies
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-        ],
-        // You can add other parameters like temperature if supported and needed for image generation
-        // temperature: 0.7 
+  const imagePrompt = `根据以下描述生成一张时尚服装模特图： ${validatedInput.outfitDescription}。请确保图片清晰、现代且美观。主要展现服装，模特姿势自然。`;
+
+  try {
+    const apiResponse = await fetch(`${SILICONFLOW_API_BASE_URL}/images/generations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SILICONFLOW_API_KEY}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        model: "Kwai-Kolors/Kolors",
+        prompt: imagePrompt,
+        n: 1,
+        size: '1024x1024',
+        response_format: 'url', // Changed from b64_json to url
+      }),
     });
 
-    if (!media || !media.url) {
-      throw new Error('AI未能生成图片。');
+    if (!apiResponse.ok) {
+      const errorBody = await apiResponse.text();
+      console.error('SiliconFlow Image API Error:', apiResponse.status, errorBody);
+      throw new Error(`Image API request failed with status ${apiResponse.status}: ${errorBody}`);
     }
-    
-    // The model might return text output as well, but we are primarily interested in the image.
-    // console.log("Text response from image generation:", text);
 
-    return { imageDataUri: media.url };
+    const responseData = await apiResponse.json();
+
+    // Adjust parsing based on the provided API response structure
+    if (!responseData.images || responseData.images.length === 0 || !responseData.images[0].url) {
+      console.error('Invalid response structure from SiliconFlow Image API (missing URL):', responseData);
+      throw new Error('Invalid image response structure from API (missing URL)');
+    }
+
+    const imageUrl = responseData.images[0].url;
+
+    // Fetch the image content from the URL
+    const imageContentResponse = await fetch(imageUrl);
+    if (!imageContentResponse.ok) {
+      const errorBody = await imageContentResponse.text();
+      console.error('Failed to fetch image from URL:', imageContentResponse.status, errorBody);
+      throw new Error(`Failed to fetch image from URL ${imageUrl}: ${imageContentResponse.status}`);
+    }
+
+    const imageArrayBuffer = await imageContentResponse.arrayBuffer();
+    const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
+    const imageDataUri = `data:image/png;base64,${imageBase64}`;
+
+    // Validate output using Zod schema
+    const result = GenerateOutfitImageOutputSchema.parse({ imageDataUri });
+    return result;
+
+  } catch (error) {
+    console.error('Error in generateOutfitImage:', error);
+    throw error; // Re-throw the error to be handled by the caller
   }
-);
+}
+
+// Removed Genkit's ai.defineFlow and related constants
