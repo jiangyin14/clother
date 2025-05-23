@@ -1,5 +1,8 @@
 import type { ClothingItem, WeatherOption, MoodOption } from '@/lib/definitions';
-import { CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, ThermometerSnowflake, Wind, Smile, Meh, Frown, Zap, Coffee } from 'lucide-react';
+import { 
+  CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, ThermometerSnowflake, Wind, 
+  Smile, Meh, Frown, Zap, Coffee, ShieldCheck, Heart, Lightbulb, PartyPopper, Waves, Focus, Briefcase, Feather, BatteryLow, AlertTriangle 
+} from 'lucide-react';
 
 export const DEFAULT_CLOTHING_ITEMS: ClothingItem[] = [
   {
@@ -51,11 +54,24 @@ export const WEATHER_OPTIONS: WeatherOption[] = [
 ];
 
 export const MOOD_OPTIONS: MoodOption[] = [
+  // 积极情绪
   { value: '开心', label: '开心', icon: Smile },
   { value: '轻松', label: '轻松', icon: Coffee },
   { value: '活力', label: '活力', icon: Zap },
-  { value: '平静', label: '平静', icon: Meh },
-  { value: '正式', label: '正式' },
-  { value: '休闲', label: '休闲' },
+  { value: '自信', label: '自信', icon: ShieldCheck },
+  { value: '浪漫', label: '浪漫', icon: Heart },
+  { value: '创意', label: '创意', icon: Lightbulb },
+  { value: '兴奋', label: '兴奋', icon: PartyPopper },
+  
+  // 中性/专注情绪
+  { value: '平静', label: '平静', icon: Waves },
+  { value: '专注', label: '专注', icon: Focus },
+  { value: '正式', label: '正式', icon: Briefcase },
+  { value: '休闲', label: '休闲', icon: Feather },
+
+  // 消极情绪
   { value: '忧郁', label: '忧郁', icon: Frown },
+  { value: '疲惫', label: '疲惫', icon: BatteryLow },
+  { value: '焦虑', label: '焦虑', icon: AlertTriangle },
+  { value: '无聊', label: '无聊', icon: Meh },
 ];
