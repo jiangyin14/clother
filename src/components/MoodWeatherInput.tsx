@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -94,13 +93,14 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
     setIsLoadingWeather(true);
     setLocationError(null);
     const formattedDate = format(date, 'yyyy-MM-dd');
+    const baseApiUrl = process.env.NEXT_PUBLIC_OPENMETEO_API_URL || 'https://api.open-meteo.com/v1/forecast';
     let weatherApiUrl = '';
 
     if (isToday(date)) {
-      weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
+      weatherApiUrl = `${baseApiUrl}?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
     } else {
       // For past or future dates (Open-Meteo allows up to 16 days forecast, and historical for past)
-      weatherApiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${formattedDate}&end_date=${formattedDate}`;
+      weatherApiUrl = `${baseApiUrl}?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${formattedDate}&end_date=${formattedDate}`;
     }
     
     try {

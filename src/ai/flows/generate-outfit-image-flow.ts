@@ -1,4 +1,3 @@
-
 // src/ai/flows/generate-outfit-image-flow.ts
 'use server';
 
@@ -14,6 +13,7 @@ import {z}from 'genkit';
 import {
   SILICONFLOW_API_KEY,
   SILICONFLOW_API_BASE_URL,
+  SILICONFLOW_IMAGE_MODEL,
 } from '@/ai/genkit';
 
 const GenerateOutfitImageInputSchema = z.object({
@@ -72,7 +72,7 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "Alibaba-Tongyi/pai-diffusion-artist-xl-uhd-v1.0", 
+        model: SILICONFLOW_IMAGE_MODEL || "Alibaba-Tongyi/pai-diffusion-artist-xl-uhd-v1.0", // Fallback if not set
         prompt: imagePrompt,
         n: 1, 
         size: '1024x1024', 
