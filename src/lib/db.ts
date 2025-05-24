@@ -17,15 +17,17 @@ export default pool;
 
 // Example DDL for tables (for reference, execute this in your MySQL client)
 /*
--- Users Table DDL (Updated)
+-- Users Table DDL (Updated for skin_tone and weight)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    gender VARCHAR(30) NULL,                     -- e.g., 'male', 'female', 'other', 'prefer_not_to_say'
+    gender VARCHAR(30) NULL,
     age INT UNSIGNED NULL,
-    style_preferences JSON NULL,                -- Stores an array of strings, e.g., ["casual", "sporty"]
-    oobe_completed BOOLEAN DEFAULT FALSE,       -- Out-of-Box Experience completed flag
+    style_preferences JSON NULL,
+    skin_tone VARCHAR(50) NULL,                 -- 新增：肤色
+    weight INT UNSIGNED NULL,                   -- 新增：体重 (kg)
+    oobe_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -43,7 +45,6 @@ CREATE TABLE IF NOT EXISTS clothing_items (
 
 -- Optional: Indexes (add if not already present from previous steps)
 CREATE INDEX IF NOT EXISTS idx_user_id_clothing ON clothing_items (user_id);
--- CREATE INDEX IF NOT EXISTS idx_username_users ON users (username); -- Usually created by UNIQUE constraint
 
 */
 
@@ -53,6 +54,7 @@ ALTER TABLE users
 ADD COLUMN gender VARCHAR(30) NULL AFTER password_hash,
 ADD COLUMN age INT UNSIGNED NULL AFTER gender,
 ADD COLUMN style_preferences JSON NULL AFTER age,
-ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER style_preferences;
+ADD COLUMN skin_tone VARCHAR(50) NULL AFTER style_preferences,
+ADD COLUMN weight INT UNSIGNED NULL AFTER skin_tone,
+ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER weight;
 */
-

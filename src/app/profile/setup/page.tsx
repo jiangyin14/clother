@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useTransition, useActionState } from 'react';
@@ -10,6 +11,8 @@ import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from 
 import GenderSelect from '@/components/GenderSelect';
 import AgeInput from '@/components/AgeInput';
 import StylePreferencesInput from '@/components/StylePreferencesInput';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +44,9 @@ export default function OobePage() {
   const [ageValue, setAgeValue] = useState<string>('');
   const [selectedGender, setSelectedGender] = useState<string | undefined>(undefined);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+  const [skinToneValue, setSkinToneValue] = useState<string>('');
+  const [weightValue, setWeightValue] = useState<string>('');
+
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
   const [state, dispatch] = useActionState(updateUserProfile, initialState);
@@ -79,6 +85,14 @@ export default function OobePage() {
     setAgeValue(event.target.value);
   };
 
+  const handleSkinToneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSkinToneValue(event.target.value);
+  };
+
+  const handleWeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setWeightValue(event.target.value);
+  };
+
   return (
     <>
       <CardHeader className="text-center">
@@ -103,6 +117,31 @@ export default function OobePage() {
             onChange={handleAgeChange}
             error={state.errors?.age?.join(', ')}
           />
+          <div className="space-y-2">
+            <Label htmlFor="skinTone">肤色</Label>
+            <Input
+              id="skinTone"
+              name="skinTone"
+              type="text"
+              placeholder="例如：白皙，自然，小麦色"
+              value={skinToneValue}
+              onChange={handleSkinToneChange}
+            />
+            {state?.errors?.skinTone && <p className="text-sm text-destructive">{state.errors.skinTone.join(', ')}</p>}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="weight">体重 (kg)</Label>
+            <Input
+              id="weight"
+              name="weight"
+              type="number"
+              placeholder="请输入您的体重 (单位: 公斤)"
+              value={weightValue}
+              onChange={handleWeightChange}
+              min="1"
+            />
+            {state?.errors?.weight && <p className="text-sm text-destructive">{state.errors.weight.join(', ')}</p>}
+          </div>
           <StylePreferencesInput
             selectedPreferences={selectedStyles}
             onPreferenceChange={handleStylePreferenceChange}

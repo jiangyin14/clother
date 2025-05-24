@@ -10,7 +10,7 @@ import type { User, AuthFormState, ProfileFormState } from '@/lib/definitions';
 import { hashPassword, verifyPassword } from '@/lib/passwordUtils';
 import { sessionOptions } from '@/lib/session';
 import type { RowDataPacket } from 'mysql2';
-import { verifyCaptchaToken } from '@/lib/captcha'; // Updated import
+import { verifyCaptchaToken } from '@/lib/captcha';
 import { ProfileFormSchema } from '@/lib/schemas';
 
 interface AppSessionData {
@@ -21,7 +21,7 @@ const RegisterSchema = z.object({
   username: z.string().min(3, '用户名至少需要3个字符').max(50, '用户名不能超过50个字符'),
   password: z.string().min(6, '密码至少需要6个字符'),
   confirmPassword: z.string(),
-  captchaToken: z.string().min(1, '请完成人机验证。'), // Renamed from turnstileToken
+  captchaToken: z.string().min(1, '请完成人机验证。'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: '两次输入的密码不一致',
   path: ['confirmPassword'],
@@ -30,7 +30,7 @@ const RegisterSchema = z.object({
 const LoginSchema = z.object({
   username: z.string().min(1, '请输入用户名'),
   password: z.string().min(1, '请输入密码'),
-  captchaToken: z.string().min(1, '请完成人机验证。'), // Renamed from turnstileToken
+  captchaToken: z.string().min(1, '请完成人机验证。'),
 });
 
 export async function register(
@@ -48,9 +48,9 @@ export async function register(
     };
   }
 
-  const { username, password, captchaToken } = validatedFields.data; // Renamed
+  const { username, password, captchaToken } = validatedFields.data;
 
-  const isHuman = await verifyCaptchaToken(captchaToken); // Updated call
+  const isHuman = await verifyCaptchaToken(captchaToken);
   if (!isHuman) {
     return { message: '人机验证失败，请重试。', errors: { captchaToken: ['验证无效'] } };
   }
@@ -87,16 +87,16 @@ export async function login(
     };
   }
 
-  const { username, password, captchaToken } = validatedFields.data; // Renamed
+  const { username, password, captchaToken } = validatedFields.data;
 
-  const isHuman = await verifyCaptchaToken(captchaToken); // Updated call
+  const isHuman = await verifyCaptchaToken(captchaToken);
   if (!isHuman) {
     return { message: '人机验证失败，请重试。', errors: { captchaToken: ['验证无效'] } };
   }
 
   try {
-    const [users] = await pool.query<RowDataPacket[]>('SELECT id, username, password_hash, gender, age, style_preferences, oobe_completed FROM users WHERE username = ?', [username]);
-    const userRow = users[0] as User & { password_hash: string } | undefined;
+    const [users] = await pool.query<RowDataPacket[]>('SELECT id, username, password_hash, gender, age, style_preferences, skin_tone, weight, oobe_completed FROM users WHERE username = ?', [username]);
+    const userRow = users[0] as User & { password_hash: string; skin_tone?: string; weight?: number; } | undefined;
 
     if (!userRow) {
       return { message: '用户名或密码错误。' };
@@ -128,6 +128,8 @@ export async function login(
       gender: userRow.gender,
       age: userRow.age,
       style_preferences: stylePrefs,
+      skinTone: userRow.skin_tone,
+      weight: userRow.weight,
       oobe_completed: !!userRow.oobe_completed,
     };
     await session.save();
@@ -170,6 +172,8 @@ export async function updateUserProfile(
     gender: formData.get('gender') || undefined,
     age: formData.get('age'), 
     stylePreferences: formData.getAll('stylePreferences'), 
+    skinTone: formData.get('skinTone') || undefined,
+    weight: formData.get('weight'),
   };
   
   const validatedFields = ProfileFormSchema.safeParse(rawFormData);
@@ -181,12 +185,19 @@ export async function updateUserProfile(
     };
   }
 
-  const { gender, age, stylePreferences } = validatedFields.data;
+  const { gender, age, stylePreferences, skinTone, weight } = validatedFields.data;
 
   try {
     await pool.query(
-      'UPDATE users SET gender = ?, age = ?, style_preferences = ? WHERE id = ?',
-      [gender || null, age === undefined ? null : age, JSON.stringify(stylePreferences || []), user.id]
+      'UPDATE users SET gender = ?, age = ?, style_preferences = ?, skin_tone = ?, weight = ? WHERE id = ?',
+      [
+        gender || null, 
+        age === undefined ? null : age, 
+        JSON.stringify(stylePreferences || []), 
+        skinTone || null,
+        weight === undefined ? null : weight,
+        user.id
+      ]
     );
 
     const cookieStore = await cookies();
@@ -195,10 +206,12 @@ export async function updateUserProfile(
       session.user.gender = gender || null;
       session.user.age = age === undefined ? null : age;
       session.user.style_preferences = stylePreferences || [];
+      session.user.skinTone = skinTone || null;
+      session.user.weight = weight === undefined ? null : weight;
       await session.save();
     }
     
-    const [updatedUserRows] = await pool.query<RowDataPacket[]>('SELECT id, username, gender, age, style_preferences, oobe_completed FROM users WHERE id = ?', [user.id]);
+    const [updatedUserRows] = await pool.query<RowDataPacket[]>('SELECT id, username, gender, age, style_preferences, skin_tone, weight, oobe_completed FROM users WHERE id = ?', [user.id]);
     const updatedUser = updatedUserRows[0] as User | undefined;
 
     return { success: true, message: '个人信息已成功更新！', user: updatedUser };

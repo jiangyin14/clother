@@ -5,6 +5,8 @@ export interface User {
   gender?: string | null;
   age?: number | null;
   style_preferences?: string[] | null;
+  skinTone?: string | null; // 新增：肤色
+  weight?: number | null;   // 新增：体重 (kg)
   oobe_completed?: boolean;
 }
 
@@ -54,6 +56,8 @@ export type ProfileFormState = {
     gender?: string[];
     age?: string[];
     stylePreferences?: string[];
+    skinTone?: string[]; // 新增
+    weight?: string[];   // 新增
     general?: string[]; 
   };
   success?: boolean;
@@ -73,5 +77,5 @@ export interface StylePreferenceOption {
 // AI Flow related types
 export interface RecommendClothingOutput {
   recommendedOutfit: string;
-  imagePromptDetails?: string; // Added for image generation
+  imagePromptDetails?: string; 
 }
