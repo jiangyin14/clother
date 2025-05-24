@@ -51,7 +51,7 @@ export async function identifyClothingAttributes(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: SILICONFLOW_VL_MODEL,
+        model: "Qwen/Qwen2.5-VL-72B-Instruct",
         messages: [
           {
             role: 'user',
@@ -84,7 +84,13 @@ export async function identifyClothingAttributes(
       throw new Error('Invalid response structure from API');
     }
 
-    const content = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+
+    // Check if the content is wrapped in a Markdown JSON code block
+    const markdownMatch = content.match(/^```json\s*([\s\S]*?)\s*```$/);
+    if (markdownMatch && markdownMatch[1]) {
+      content = markdownMatch[1]; // Extract the JSON string from the Markdown block
+    }
 
     // Assuming the content is a JSON string array e.g., "["红色", "棉布"]"
     let attributesArray;
@@ -92,8 +98,6 @@ export async function identifyClothingAttributes(
       attributesArray = JSON.parse(content);
     } catch (e) {
       console.error("Failed to parse attributes JSON from model response:", content, e);
-      // Fallback or attempt to extract from a more general string if parsing fails
-      // For now, we'll throw, but you could implement more robust parsing/extraction
       throw new Error('Failed to parse attributes from model response.');
     }
 

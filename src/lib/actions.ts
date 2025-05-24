@@ -3,11 +3,13 @@ import { identifyClothingAttributes } from '@/ai/flows/identify-clothing-attribu
 import { recommendClothing } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
 import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
+import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
 
 import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-clothing-attributes';
 import type { RecommendClothingOutput } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
 import type { RecommendNewOutfitOutput } from '@/ai/flows/recommend-new-outfit-flow';
 import type { GenerateOutfitImageOutput } from '@/ai/flows/generate-outfit-image-flow';
+import type { GenerateClothingNameOutput } from '@/ai/flows/generate-clothing-name-flow';
 
 export async function handleIdentifyAttributesAction(
   photoDataUri: string
@@ -18,6 +20,21 @@ export async function handleIdentifyAttributesAction(
   } catch (error) {
     console.error('Error identifying clothing attributes:', error);
     throw new Error('识别衣物属性失败，请重试。');
+  }
+}
+
+export async function handleGenerateClothingNameAction(
+  attributes: string[]
+): Promise<GenerateClothingNameOutput> {
+  if (!attributes || attributes.length === 0) {
+    throw new Error('衣物属性是生成名称所必需的。');
+  }
+  try {
+    const result = await generateClothingName({ attributes });
+    return result;
+  } catch (error) {
+    console.error('Error generating clothing name:', error);
+    throw new Error('生成衣物名称失败，请重试。');
   }
 }
 

@@ -73,27 +73,28 @@ export async function recommendClothing(input: RecommendClothingInput): Promise<
     }
 
     const content = data.choices[0].message.content;
+    let jsonString = content.trim(); // Start by trimming
+
+    // Attempt to extract JSON string if it's wrapped in markdown code block
+    // Handles ```json ... ``` or ``` ... ```
+    const markdownMatch = jsonString.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+    if (markdownMatch && markdownMatch[1]) {
+      jsonString = markdownMatch[1].trim(); // Extract and trim the inner content
+    }
+    // At this point, jsonString should be the raw JSON string, or the original content if not in markdown
+
     let parsedContent;
     try {
-      // Attempt to parse the content as JSON directly
-      parsedContent = JSON.parse(content);
-    } catch (e) {
-      console.error("Failed to parse content as JSON, attempting to extract from string:", content, e);
-      // Fallback: if the model doesn't strictly return JSON, you might need to extract it
-      const match = content.match(/{\s*"recommendedOutfit":\s*".*?"\s*}/);
-      if (match && match[0]) {
-        try {
-          parsedContent = JSON.parse(match[0]);
-        } catch (e2) {
-          console.error("Failed to parse extracted JSON:", match[0], e2);
-          throw new Error('Failed to parse recommended outfit from model response after extraction.');
-        }
-      } else {
-        throw new Error('Could not find or parse recommended outfit from model response.');
-      }
+      parsedContent = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error("Failed to parse JSON from model response. Content after attempting to strip markdown:", jsonString, parseError);
+      // If parsing still fails, the content itself is likely not valid JSON.
+      throw new Error(`Failed to parse JSON from model response. Raw content: "${content}". Processed string for parsing: "${jsonString}". Error: ${parseError.message}`);
     }
 
-    // Validate output using Zod schema
+    // Validate output using Zod schema.
+    // By default, Zod allows and strips unknown keys.
+    // So, if the model includes "reason", it will be ignored here, and 'result' will conform to RecommendClothingOutputSchema.
     const result = RecommendClothingOutputSchema.parse(parsedContent);
     return result;
 

@@ -7,6 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { ClothingItem } from '@/lib/definitions';
 import { X, Trash2, Shirt } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ClothingItemCardProps {
   item: ClothingItem;
@@ -57,10 +68,28 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
           </Button>
         )}
         {!showAddButton && onRemove && (
-          <Button onClick={() => onRemove(item.id)} variant="outline" size="sm" className="w-full text-destructive hover:bg-destructive/10 border-destructive/50 hover:text-destructive">
-            <Trash2 size={16} className="mr-2" />
-            移除
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full text-destructive hover:bg-destructive/10 border-destructive/50 hover:text-destructive">
+                <Trash2 size={16} className="mr-2" />
+                移除
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确定要移除这件衣物吗？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  此操作无法撤销。这将会从你的衣橱中永久删除这件衣物。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onRemove(item.id)} className="bg-destructive hover:bg-destructive/90">
+                  确定移除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </CardFooter>
     </Card>

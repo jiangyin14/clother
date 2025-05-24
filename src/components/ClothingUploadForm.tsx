@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { handleIdentifyAttributesAction } from '@/lib/actions';
+import { handleIdentifyAttributesAction, handleGenerateClothingNameAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import type { ClothingItem } from '@/lib/definitions';
 import { UploadCloud, Loader2 } from 'lucide-react';
@@ -52,21 +52,40 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
 
     setIsLoading(true);
     try {
-      const result = await handleIdentifyAttributesAction(imageDataUri);
+      const attributeResult = await handleIdentifyAttributesAction(imageDataUri);
+      let itemName = fileName || '上传的物品';
+
+      if (attributeResult.attributes && attributeResult.attributes.length > 0) {
+        try {
+          const nameResult = await handleGenerateClothingNameAction(attributeResult.attributes);
+          itemName = nameResult.name;
+          toast({
+            title: '衣物名称已生成！',
+            description: `名称: ${itemName}`,
+          });
+        } catch (nameError) {
+          console.error('Failed to generate clothing name:', nameError);
+          toast({
+            title: '名称生成失败',
+            description: nameError instanceof Error ? nameError.message : '使用默认文件名。',
+            variant: 'destructive',
+          });
+        }
+      }
+
       onClothingAnalyzed({
-        name: fileName || '上传的物品',
+        name: itemName,
         imageUrl: imageDataUri,
-        attributes: result.attributes,
+        attributes: attributeResult.attributes,
       });
       toast({
         title: '属性已识别！',
-        description: `找到属性: ${result.attributes.join('、') || '无'}`,
+        description: `找到属性: ${attributeResult.attributes.join('、') || '无'}`,
       });
       // Reset form
       setImagePreview(null);
       setImageDataUri(null);
       setFileName('');
-      // Clear file input visually (this is a bit tricky with controlled file inputs)
       const fileInput = document.getElementById('clothing-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
 
