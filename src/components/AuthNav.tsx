@@ -1,8 +1,9 @@
 
 'use client';
 
-import Link from 'next/link';
 import React, { useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // Keep Link for the non-user section
 import { LogIn, LogOut, UserPlus, UserCircle, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { logout } from '@/actions/userActions';
@@ -22,9 +23,14 @@ interface AuthNavProps {
 
 export default function AuthNav({ user }: AuthNavProps) {
   const logoutFormRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   const handleLogoutSelect = () => {
     logoutFormRef.current?.requestSubmit();
+  };
+
+  const handleProfileSelect = () => {
+    router.push('/profile');
   };
 
   return (
@@ -38,27 +44,37 @@ export default function AuthNav({ user }: AuthNavProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>我的账户</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="flex items-center gap-2 w-full">
+            <DropdownMenuItem
+              onSelect={handleProfileSelect}
+              className="cursor-pointer" // className applies to the item itself
+            >
+              {/* Single child span for layout */}
+              <span className="flex items-center gap-2 w-full">
                 <Settings size={16} />
                 用户中心
-              </Link>
+              </span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <form action={logout} ref={logoutFormRef} className="w-full" style={{ display: 'none' }}>
               <button type="submit" />
             </form>
-            <DropdownMenuItem 
-              onSelect={handleLogoutSelect} 
-              className="w-full text-left flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+            <DropdownMenuItem
+              onSelect={handleLogoutSelect}
+              className="w-full text-left cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
             >
-              <LogOut size={16} />
-              登出
+              {/* Single child span for layout */}
+              <span className="flex items-center gap-2">
+                <LogOut size={16} />
+                登出
+              </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
         <>
+          {/* These Buttons use asChild with Link, which should be fine if Button component is robust.
+              If these also cause issues, they'd need similar treatment or Link's legacyBehavior.
+              However, the current error stack points to DropdownMenuItem. */}
           <Button variant="ghost" size="sm" asChild>
             <Link href="/login" className="flex items-center gap-1.5">
               <LogIn size={16} />
