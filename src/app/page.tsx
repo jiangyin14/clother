@@ -17,7 +17,8 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { getUserFromSession } from '@/actions/userActions'; 
-import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
+// CaptchaWidget is no longer needed on this page
+// import CaptchaWidget from '@/components/CaptchaWidget'; 
 
 export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
@@ -27,7 +28,8 @@ export default function RecommendationPage() {
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
   const [isLoadingCloset, setIsLoadingCloset] = useState(true); 
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
+  // captchaToken is no longer needed on this page
+  // const [captchaToken, setCaptchaToken] = useState<string | null>(null); 
 
   const { toast } = useToast();
 
@@ -120,10 +122,11 @@ export default function RecommendationPage() {
   };
 
   const handleGetRecommendation = async () => {
-    if (!captchaToken) { // Updated condition
-      toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
-      return;
-    }
+    // Removed captchaToken check
+    // if (!captchaToken) { 
+    //   toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
+    //   return;
+    // }
     if (selectedMoods.length === 0) {
       toast({ title: "缺少心情", description: "请选择你当前的心情。", variant: "destructive" });
       return;
@@ -148,7 +151,8 @@ export default function RecommendationPage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes, captchaToken); // Updated call
+      // Removed captchaToken from the call
+      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes); 
       setRecommendation(result.recommendedOutfit);
       toast({ title: "推荐已准备好！", description: "我们为你找到了一套服装。" });
     } catch (error) {
@@ -175,8 +179,9 @@ export default function RecommendationPage() {
   const canGetRecommendation = !isGettingRecommendation && 
                                myClosetItems.length > 0 && 
                                selectedMoods.length > 0 && 
-                               !!selectedWeather &&
-                               !!captchaToken; // Updated condition
+                               !!selectedWeather;
+                               // Removed captchaToken from condition
+                               // && !!captchaToken; 
 
   return (
     <div className="container mx-auto font-sans">
@@ -210,15 +215,18 @@ export default function RecommendationPage() {
             moodOptions={MOOD_OPTIONS}
           />
           
+          {/* CaptchaWidget removed from here */}
+          {/*
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
                 <CardTitle>人机验证</CardTitle>
                 <CardDescription>请完成以下验证以继续。</CardDescription>
             </CardHeader>
             <CardContent>
-                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
+                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" />
             </CardContent>
           </Card>
+          */}
               
           <Button 
             onClick={handleGetRecommendation} 

@@ -5,7 +5,10 @@ import { recommendClothing } from '@/ai/flows/recommend-clothing-based-on-mood-a
 import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
 import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
-import { verifyCaptchaToken } from '@/lib/captcha'; // Updated import
+// verifyCaptchaToken is no longer needed here for AI actions, but kept if other actions might use it.
+// If not used by any other action in this file, it can be removed from imports.
+// For now, we'll keep it as userActions.ts still uses it.
+// import { verifyCaptchaToken } from '@/lib/captcha'; 
 
 import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-clothing-attributes';
 import type { RecommendClothingOutput } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
@@ -43,13 +46,13 @@ export async function handleGenerateClothingNameAction(
 export async function handleGetRecommendationAction(
   moodKeywords: string,
   weatherInformation: string,
-  clothingKeywords: string[],
-  captchaToken: string | null // Updated from turnstileToken
+  clothingKeywords: string[]
+  // captchaToken: string | null // Removed captchaToken
 ): Promise<RecommendClothingOutput> {
-  const isHuman = await verifyCaptchaToken(captchaToken);
-  if (!isHuman) {
-    throw new Error('人机验证失败，请刷新页面后重试。');
-  }
+  // const isHuman = await verifyCaptchaToken(captchaToken); // Removed captcha verification
+  // if (!isHuman) {
+  //   throw new Error('人机验证失败，请刷新页面后重试。');
+  // }
 
   if (!moodKeywords || !weatherInformation || clothingKeywords.length === 0) {
     throw new Error('心情、天气和至少一件衣物是获取推荐所必需的。');
@@ -71,13 +74,13 @@ export async function handleGetRecommendationAction(
 export async function handleExploreOutfitAction(
   selectedNewItems: string[],
   moodKeywords: string,
-  weatherInformation: string,
-  captchaToken: string | null // Updated from turnstileToken
+  weatherInformation: string
+  // captchaToken: string | null // Removed captchaToken
 ): Promise<RecommendNewOutfitOutput> {
-  const isHuman = await verifyCaptchaToken(captchaToken);
-  if (!isHuman) {
-    throw new Error('人机验证失败，请刷新页面后重试。');
-  }
+  // const isHuman = await verifyCaptchaToken(captchaToken); // Removed captcha verification
+  // if (!isHuman) {
+  //   throw new Error('人机验证失败，请刷新页面后重试。');
+  // }
 
   if (selectedNewItems.length === 0 || !moodKeywords || !weatherInformation) {
     throw new Error('探索物品、心情和天气信息都是必需的。');

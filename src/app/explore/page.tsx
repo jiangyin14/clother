@@ -16,7 +16,8 @@ import { EXPLORABLE_ITEMS, MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants
 import type { ExplorableItem } from '@/lib/definitions';
 import { handleExploreOutfitAction, handleGenerateOutfitImageAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
+// CaptchaWidget is no longer needed on this page
+// import CaptchaWidget from '@/components/CaptchaWidget'; 
 
 export default function ExplorePage() {
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
@@ -29,7 +30,8 @@ export default function ExplorePage() {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
+  // captchaToken is no longer needed on this page
+  // const [captchaToken, setCaptchaToken] = useState<string | null>(null); 
 
   const { toast } = useToast();
 
@@ -44,10 +46,11 @@ export default function ExplorePage() {
   };
 
   const generateNewOutfit = useCallback(async (isRefresh: boolean = false) => {
-    if (!captchaToken) { // Updated condition
-      toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
-      return;
-    }
+    // Removed captchaToken check
+    // if (!captchaToken) { 
+    //   toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
+    //   return;
+    // }
     if (selectedItems.length === 0) {
       toast({ title: "未选择物品", description: "请至少选择一个你想探索的衣物类型。", variant: "destructive" });
       return;
@@ -74,7 +77,8 @@ export default function ExplorePage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, captchaToken); // Updated call
+      // Removed captchaToken from the call
+      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather); 
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       if (!isRefresh) {
@@ -102,7 +106,8 @@ export default function ExplorePage() {
       setIsLoadingRecommendation(false);
       setIsLoadingImage(false);
     }
-  }, [selectedItems, selectedMoods, selectedWeather, toast, captchaToken]); // Updated dependency
+  // Removed captchaToken from dependencies
+  }, [selectedItems, selectedMoods, selectedWeather, toast]); 
 
   if (!clientLoaded) {
     return (
@@ -112,7 +117,8 @@ export default function ExplorePage() {
     );
   }
 
-  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather && !!captchaToken; // Updated condition
+  // Updated canSubmit condition
+  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather; 
 
   return (
     <div className="container mx-auto font-sans">
@@ -175,19 +181,23 @@ export default function ExplorePage() {
             moodOptions={MOOD_OPTIONS}
           />
           
+          {/* CaptchaWidget and its card removed from here */}
+          {/*
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
               <CardTitle className="text-xl">3. 人机验证</CardTitle>
                <CardDescription>请完成验证以获取建议。</CardDescription>
             </CardHeader>
             <CardContent>
-                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
+                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" />
             </CardContent>
           </Card>
+          */}
           
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">4. 生成搭配</CardTitle>
+              {/* Updated step number if captcha was step 3 */}
+              <CardTitle className="text-xl">3. 生成搭配</CardTitle> 
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
