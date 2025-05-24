@@ -1,10 +1,11 @@
+
 // src/ai/flows/recommend-clothing-based-on-mood-and-weather.ts
 'use server';
 
 /**
- * @fileOverview Recommends clothing combinations based on mood and weather.
+ * @fileOverview Recommends clothing combinations based on mood, weather, and available clothing.
  *
- * - recommendClothing - A function that recommends clothing combinations.
+ * - recommendClothing - A function that recommends clothing combinations and provides an image prompt.
  * - RecommendClothingInput - The input type for the recommendClothing function.
  * - RecommendClothingOutput - The return type for the recommendClothing function.
  */
@@ -15,6 +16,8 @@ import {
   SILICONFLOW_API_BASE_URL,
   SILICONFLOW_TEXT_MODEL
 } from '@/ai/genkit';
+import type { RecommendClothingOutput as RecommendClothingOutputType } from '@/lib/definitions';
+
 
 const RecommendClothingInputSchema = z.object({
   moodKeywords: z.string().describe('描述用户心情的关键词 (例如：轻松、活力、正式)。'),
@@ -24,22 +27,26 @@ const RecommendClothingInputSchema = z.object({
 export type RecommendClothingInput = z.infer<typeof RecommendClothingInputSchema>;
 
 const RecommendClothingOutputSchema = z.object({
-  recommendedOutfit: z.string().describe('推荐的服装组合描述 (中文)。'),
+  recommendedOutfit: z.string().describe('推荐的服装组合的详细文字描述 (中文)。'),
+  imagePromptDetails: z.string().optional().describe('用于AI图像生成的详细提示词 (中文)，描述服装的关键元素、颜色、材质和风格。'),
 });
 export type RecommendClothingOutput = z.infer<typeof RecommendClothingOutputSchema>;
 
-export async function recommendClothing(input: RecommendClothingInput): Promise<RecommendClothingOutput> {
-  // Validate input using Zod schema
+
+export async function recommendClothing(input: RecommendClothingInput): Promise<RecommendClothingOutputType> {
   const validatedInput = RecommendClothingInputSchema.parse(input);
 
-  const promptContent = `请根据用户的心情和当前的天气状况，从以下可选衣物中推荐一个服装组合。
+  const promptContent = `你是一位AI时尚造型师。请根据用户的心情、当前天气状况以及他们衣橱中的可选衣物，推荐一套完整的、时尚的服装搭配。
 
-心情: ${validatedInput.moodKeywords}
-天气: ${validatedInput.weatherInformation}
-可选衣物: ${validatedInput.clothingKeywords.join(', ')}
+用户心情: ${validatedInput.moodKeywords}
+天气状况: ${validatedInput.weatherInformation}
+可选衣物 (来自用户衣橱): ${validatedInput.clothingKeywords.join(', ')}
 
-请综合考虑心情和天气，推荐最合适的搭配。请用几句话解释你的理由。
-请用中文提供推荐和理由。输出应为JSON对象，包含 recommendedOutfit 字段，例如：{"recommendedOutfit": "推荐描述..."}。`;
+请提供两部分输出，格式为JSON对象，包含 recommendedOutfit 和 imagePromptDetails 字段:
+1.  **recommendedOutfit**: 对这套推荐服装的详细文字描述，包括为什么这样搭配，以及它适合的场合。请用自然流畅的中文表述。
+2.  **imagePromptDetails**: 一段专门用于AI图像生成的提示文本。这段文本应清晰、简洁地描述这套服装的关键视觉元素，例如："一位模特穿着[上衣描述，如：一件宽松的白色亚麻衬衫]，搭配[下装描述，如：一条深蓝色高腰阔腿牛仔裤]和[鞋子描述，如：一双棕色皮革踝靴]。配饰包括[配饰描述，如：一条简约的银色项链和一个黑色单肩包]。整体风格是[风格描述，如：休闲时尚/都市简约]。背景可以是[背景描述，如：明亮的城市街道/纯色背景]"。确保包含颜色、材质和具体款式。如果无法根据可选衣物生成有意义的图像提示，可以将此字段留空或提供一个通用提示。
+
+请用中文回答。输出严格为JSON对象，例如：{"recommendedOutfit": "描述...", "imagePromptDetails": "图片提示..."}。`;
 
   try {
     const response = await fetch(`${SILICONFLOW_API_BASE_URL}/chat/completions`, {
@@ -56,50 +63,46 @@ export async function recommendClothing(input: RecommendClothingInput): Promise<
             content: promptContent,
           },
         ],
+        // Consider response_format: { type: "json_object" } if supported by SiliconFlow
+        // and other params like max_tokens, temperature as needed.
       }),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('SiliconFlow API Error:', response.status, errorBody);
+      console.error('SiliconFlow API Error (recommendClothing):', response.status, errorBody);
       throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
     }
 
     const data = await response.json();
 
     if (!data.choices || data.choices.length === 0 || !data.choices[0].message || !data.choices[0].message.content) {
-      console.error('Invalid response structure from SiliconFlow API:', data);
+      console.error('Invalid response structure from SiliconFlow API (recommendClothing):', data);
       throw new Error('Invalid response structure from API');
     }
 
     const content = data.choices[0].message.content;
-    let jsonString = content.trim(); // Start by trimming
+    let jsonString = content.trim();
 
-    // Attempt to extract JSON string if it's wrapped in markdown code block
-    // Handles ```json ... ``` or ``` ... ```
     const markdownMatch = jsonString.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
     if (markdownMatch && markdownMatch[1]) {
-      jsonString = markdownMatch[1].trim(); // Extract and trim the inner content
+      jsonString = markdownMatch[1].trim();
     }
-    // At this point, jsonString should be the raw JSON string, or the original content if not in markdown
 
     let parsedContent;
     try {
       parsedContent = JSON.parse(jsonString);
     } catch (parseError) {
-      console.error("Failed to parse JSON from model response. Content after attempting to strip markdown:", jsonString, parseError);
-      // If parsing still fails, the content itself is likely not valid JSON.
-      throw new Error(`Failed to parse JSON from model response. Raw content: "${content}". Processed string for parsing: "${jsonString}". Error: ${parseError.message}`);
+      console.error("Failed to parse JSON from model response (recommendClothing). Content:", jsonString, parseError);
+      throw new Error(`Failed to parse JSON from model response. Raw content: "${content}". Processed string: "${jsonString}". Error: ${parseError.message}`);
     }
-
+    
     // Validate output using Zod schema.
-    // By default, Zod allows and strips unknown keys.
-    // So, if the model includes "reason", it will be ignored here, and 'result' will conform to RecommendClothingOutputSchema.
     const result = RecommendClothingOutputSchema.parse(parsedContent);
-    return result;
+    return result as RecommendClothingOutputType; // Cast to the lib/definitions type
 
   } catch (error) {
     console.error('Error in recommendClothing:', error);
-    throw error; // Re-throw the error to be handled by the caller
+    throw error;
   }
 }

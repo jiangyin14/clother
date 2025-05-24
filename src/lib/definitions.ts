@@ -43,7 +43,7 @@ export type AuthFormState = {
     username?: string[];
     password?: string[];
     confirmPassword?: string[]; 
-    captchaToken?: string[]; // Changed from turnstileToken
+    captchaToken?: string[];
   };
   success?: boolean;
 };
@@ -68,4 +68,10 @@ export interface GenderOption {
 export interface StylePreferenceOption {
   id: string;
   label: string;
+}
+
+// AI Flow related types
+export interface RecommendClothingOutput {
+  recommendedOutfit: string;
+  imagePromptDetails?: string; // Added for image generation
 }
