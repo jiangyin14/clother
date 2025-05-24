@@ -1,12 +1,10 @@
-
 "use client";
 
-import React, { useState, useEffect, useTransition } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useState, useEffect, useTransition, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { updateUserProfile, markOobeAsCompleted } from '@/actions/userActions';
-import { ProfileFormSchema } from '@/lib/schemas'; // Updated import
-import type { ProfileFormState, User } from '@/lib/definitions';
+import type { ProfileFormState } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import GenderSelect from '@/components/GenderSelect';
@@ -15,8 +13,6 @@ import StylePreferencesInput from '@/components/StylePreferencesInput';
 import { Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { getUserFromSession } from '@/actions/userActions'; // To fetch initial data if any
-
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -40,14 +36,14 @@ function SubmitButton() {
 export default function OobePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  
+  const [, startTransition] = useTransition();
+
   const [ageValue, setAgeValue] = useState<string>('');
   const [selectedGender, setSelectedGender] = useState<string | undefined>(undefined);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
-  const [state, dispatch] = useFormState(updateUserProfile, initialState);
+  const [state, dispatch] = useActionState(updateUserProfile, initialState);
 
   useEffect(() => {
     if (state.success && state.message) {
@@ -57,7 +53,7 @@ export default function OobePage() {
         if (oobeResult.success) {
           toast({ title: '设置完成！', description: '欢迎使用 Clother (衣者)！' });
           router.push('/');
-          router.refresh(); // Important to refresh layout and session data
+          router.refresh();
         } else {
           toast({ title: '错误', description: oobeResult.message || '无法完成OOBE状态更新。', variant: 'destructive' });
         }
@@ -65,18 +61,23 @@ export default function OobePage() {
     } else if (!state.success && state.message) {
       toast({ title: '保存失败', description: state.message, variant: 'destructive' });
     }
-  }, [state, toast, router]);
+  }, [state, toast, router, startTransition]);
 
   const handleStylePreferenceChange = (preferenceId: string, checked: boolean) => {
-    setSelectedStyles(prev =>
-      checked ? [...prev, preferenceId] : prev.filter(id => id !== preferenceId)
-    );
+    setSelectedStyles(prev => {
+      const currentStyles = new Set(prev);
+      if (checked) {
+        currentStyles.add(preferenceId);
+      } else {
+        currentStyles.delete(preferenceId);
+      }
+      return Array.from(currentStyles);
+    });
   };
-  
+
   const handleAgeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAgeValue(event.target.value);
   };
-
 
   return (
     <>
@@ -93,23 +94,22 @@ export default function OobePage() {
             </Alert>
           )}
 
-          <GenderSelect 
-            value={selectedGender} 
-            onValueChange={setSelectedGender} 
+          <GenderSelect
+            value={selectedGender}
+            onValueChange={setSelectedGender}
           />
-          <AgeInput 
+          <AgeInput
             value={ageValue}
             onChange={handleAgeChange}
             error={state.errors?.age?.join(', ')}
           />
-          <StylePreferencesInput 
+          <StylePreferencesInput
             selectedPreferences={selectedStyles}
             onPreferenceChange={handleStylePreferenceChange}
           />
            {state.errors?.stylePreferences && <p className="text-sm text-destructive">{state.errors.stylePreferences.join(', ')}</p>}
 
-           {/* Hidden inputs for stylePreferences if using getAll in action */}
-            {selectedStyles.map(styleId => (
+           {selectedStyles.map(styleId => (
               <input type="hidden" name="stylePreferences" value={styleId} key={`hidden-style-${styleId}`} />
             ))}
         </CardContent>

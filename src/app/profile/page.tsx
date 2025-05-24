@@ -1,11 +1,9 @@
-
 "use client";
 
-import React, { useState, useEffect, useTransition } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useState, useEffect, useTransition, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { updateUserProfile } from '@/actions/userActions';
-import { ProfileFormSchema } from '@/lib/schemas'; // Updated import
 import type { ProfileFormState, User } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -40,7 +38,7 @@ function SubmitButton() {
 export default function ProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition(); // Keep startTransition if it's used later, remove if not. Assuming it might be used by logic not shown. Or remove useTransition entirely if neither is used.
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
@@ -50,7 +48,7 @@ export default function ProfilePage() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
-  const [state, dispatch] = useFormState(updateUserProfile, initialState);
+  const [state, dispatch] = useActionState(updateUserProfile, initialState);
 
  useEffect(() => {
     async function fetchUser() {
