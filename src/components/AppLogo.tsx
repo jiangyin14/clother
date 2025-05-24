@@ -1,10 +1,12 @@
 import React from 'react';
+import Image from 'next/image'; // Import Next.js Image component
+import clotherIcon from '@/assets/clother_icon.png'; // Import the image
 
 const AppLogo = () => {
   return (
     <div className="flex items-center space-x-2">
-      {/* You can replace this with an SVG icon if desired */}
-      <span className="text-2xl font-bold text-primary">Clother (衣者)</span>
+      {/* Replace text with the Image component */}
+      <Image src={clotherIcon} alt="Clother Icon" width={32} height={32} />
     </div>
   );
 };
