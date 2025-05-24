@@ -16,17 +16,18 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { getUserFromSession } from '@/actions/userActions'; // To check login status on client (or pass as prop)
-
+import { getUserFromSession } from '@/actions/userActions'; 
+import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
 
 export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [selectedWeather, setSelectedWeather] = useState<string>(''); // Initial empty, will be auto-filled
+  const [selectedWeather, setSelectedWeather] = useState<string>('');
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
   const [isLoadingCloset, setIsLoadingCloset] = useState(true); 
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // Turnstile token state
 
 
   const { toast } = useToast();
@@ -78,7 +79,7 @@ export default function RecommendationPage() {
             toast({ title: "已添加衣物", description: `${result.name} 已保存到您的在线衣橱。` });
         }
     } else {
-        setMyClosetItems((prevItems) => [newItemForState, ...prevItems]);
+        setMyClosetItems((prevItems) => [...prevItems, newItemForState]);
         toast({ title: "已添加衣物 (未登录)", description: `${newItemForState.name} 已添加到本地衣橱，登录后可保存。` });
     }
   };
@@ -86,9 +87,6 @@ export default function RecommendationPage() {
   const handleAddDefaultClothing = (itemToAdd: ClothingItem) => {
     if (!myClosetItems.find(item => item.id === itemToAdd.id)) {
       if (isLoggedIn) {
-        // This assumes default items are not user-specific in the DB if added by a logged-in user
-        // A more robust way would be to copy the item data and assign a new ID and current user_id.
-        // For now, let's treat adding a "default" as adding its details to the user's closet
         const itemToSaveToDb = { ...itemToAdd, id: `user-copy-${itemToAdd.id}-${Date.now()}`, isDefault: false };
         addClothingItem(itemToSaveToDb).then(res => {
           if ('error' in res) {
@@ -123,6 +121,10 @@ export default function RecommendationPage() {
   };
 
   const handleGetRecommendation = async () => {
+    if (!turnstileToken) {
+      toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
+      return;
+    }
     if (selectedMoods.length === 0) {
       toast({ title: "缺少心情", description: "请选择你当前的心情。", variant: "destructive" });
       return;
@@ -131,15 +133,14 @@ export default function RecommendationPage() {
       toast({ title: "缺少天气", description: "请选择或自动获取天气信息。", variant: "destructive" });
       return;
     }
-    if (myClosetItems.length === 0 && !isLoggedIn) { // If not logged in, and local closet is empty
+    if (myClosetItems.length === 0 && !isLoggedIn) { 
       toast({ title: "衣橱为空", description: "请先添加一些衣物到你的本地衣橱。", variant: "destructive" });
       return;
     }
-    if (myClosetItems.length === 0 && isLoggedIn && !isLoadingCloset) { // If logged in, closet loaded and is empty
+    if (myClosetItems.length === 0 && isLoggedIn && !isLoadingCloset) { 
       toast({ title: "在线衣橱为空", description: "请先添加一些衣物到您的在线衣橱。", variant: "destructive" });
       return;
     }
-
 
     setIsGettingRecommendation(true);
     setRecommendation(null); 
@@ -148,7 +149,7 @@ export default function RecommendationPage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes);
+      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes, turnstileToken);
       setRecommendation(result.recommendedOutfit);
       toast({ title: "推荐已准备好！", description: "我们为你找到了一套服装。" });
     } catch (error) {
@@ -171,6 +172,12 @@ export default function RecommendationPage() {
       </div>
     );
   }
+  
+  const canGetRecommendation = !isGettingRecommendation && 
+                               myClosetItems.length > 0 && 
+                               selectedMoods.length > 0 && 
+                               !!selectedWeather &&
+                               !!turnstileToken;
 
   return (
     <div className="container mx-auto font-sans">
@@ -203,10 +210,20 @@ export default function RecommendationPage() {
             weatherOptions={WEATHER_OPTIONS}
             moodOptions={MOOD_OPTIONS}
           />
+          
+          <Card className="shadow-lg rounded-xl">
+            <CardHeader>
+                <CardTitle>人机验证</CardTitle>
+                <CardDescription>请完成以下验证以继续。</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <TurnstileWidget onTokenChange={setTurnstileToken} />
+            </CardContent>
+          </Card>
               
           <Button 
             onClick={handleGetRecommendation} 
-            disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather}
+            disabled={!canGetRecommendation}
             className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-md"
             size="lg"
           >
@@ -232,4 +249,3 @@ export default function RecommendationPage() {
     </div>
   );
 }
-

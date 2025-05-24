@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -9,6 +10,7 @@ import type { User, AuthFormState } from '@/lib/definitions';
 import { hashPassword, verifyPassword } from '@/lib/passwordUtils';
 import { sessionOptions } from '@/lib/session';
 import type { RowDataPacket } from 'mysql2';
+import { verifyTurnstileToken } from '@/lib/turnstile'; // Import Turnstile verification
 
 // Define the shape of your session data
 interface AppSessionData {
@@ -19,6 +21,7 @@ const RegisterSchema = z.object({
   username: z.string().min(3, '用户名至少需要3个字符').max(50, '用户名不能超过50个字符'),
   password: z.string().min(6, '密码至少需要6个字符'),
   confirmPassword: z.string(),
+  turnstileToken: z.string().min(1, '请完成人机验证。'), // Added Turnstile token
 }).refine((data) => data.password === data.confirmPassword, {
   message: '两次输入的密码不一致',
   path: ['confirmPassword'], // Path of error
@@ -27,6 +30,7 @@ const RegisterSchema = z.object({
 const LoginSchema = z.object({
   username: z.string().min(1, '请输入用户名'),
   password: z.string().min(1, '请输入密码'),
+  turnstileToken: z.string().min(1, '请完成人机验证。'), // Added Turnstile token
 });
 
 export async function register(
@@ -44,7 +48,13 @@ export async function register(
     };
   }
 
-  const { username, password } = validatedFields.data;
+  const { username, password, turnstileToken } = validatedFields.data;
+
+  // Verify Turnstile token
+  const isHuman = await verifyTurnstileToken(turnstileToken);
+  if (!isHuman) {
+    return { message: '人机验证失败，请重试。' };
+  }
 
   try {
     const [existingUsers] = await pool.query<RowDataPacket[]>('SELECT id FROM users WHERE username = ?', [username]);
@@ -78,7 +88,13 @@ export async function login(
     };
   }
 
-  const { username, password } = validatedFields.data;
+  const { username, password, turnstileToken } = validatedFields.data;
+
+  // Verify Turnstile token
+  const isHuman = await verifyTurnstileToken(turnstileToken);
+  if (!isHuman) {
+    return { message: '人机验证失败，请重试。' };
+  }
 
   try {
     const [users] = await pool.query<RowDataPacket[]>('SELECT id, username, password_hash FROM users WHERE username = ?', [username]);

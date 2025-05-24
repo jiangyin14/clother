@@ -3,21 +3,21 @@
 
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
-import { useActionState } from 'react';
-import { useFormState } from 'react-dom';
+import { useActionState, useState } from 'react'; // Added useState
 import { login } from '@/actions/userActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSearchParams } from 'next/navigation';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert'; // Removed AlertTitle
 import { LogIn } from 'lucide-react';
+import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
 
-function LoginButton() {
+function LoginButton({ disabled }: { disabled?: boolean }) { // Added disabled prop
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" aria-disabled={pending} disabled={pending}>
+    <Button type="submit" className="w-full" aria-disabled={pending || disabled} disabled={pending || disabled}>
       {pending ? '登录中...' : '登录'}
     </Button>
   );
@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [state, dispatch] = useActionState(login, undefined);
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   return (
     <Card className="shadow-xl">
@@ -45,7 +46,7 @@ export default function LoginPage() {
             </Alert>
           )}
           {state?.message && (
-            <Alert variant={state.success ? "default" : "destructive"}>
+             <Alert variant={state.errors || (state.message && !state.message.includes("成功")) ? "destructive" : "default"}>
               <AlertDescription>{state.message}</AlertDescription>
             </Alert>
           )}
@@ -59,9 +60,17 @@ export default function LoginPage() {
             <Input id="password" name="password" type="password" placeholder="••••••••" required />
             {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password.join(', ')}</p>}
           </div>
+          
+          <div className="space-y-2">
+            <Label>人机验证</Label>
+            <TurnstileWidget onTokenChange={setTurnstileToken} />
+            <input type="hidden" name="turnstileToken" value={turnstileToken || ''} />
+            {state?.errors?.turnstileToken && <p className="text-sm text-destructive">{state.errors.turnstileToken.join(', ')}</p>}
+          </div>
+
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <LoginButton />
+          <LoginButton disabled={!turnstileToken} />
           <p className="text-center text-sm text-muted-foreground">
             还没有账户？{' '}
             <Link href="/register" className="font-medium text-primary hover:underline">

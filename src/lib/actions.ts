@@ -1,9 +1,11 @@
+
 'use server';
 import { identifyClothingAttributes } from '@/ai/flows/identify-clothing-attributes';
 import { recommendClothing } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
 import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
 import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
+import { verifyTurnstileToken } from '@/lib/turnstile'; // Import Turnstile verification
 
 import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-clothing-attributes';
 import type { RecommendClothingOutput } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
@@ -13,6 +15,8 @@ import type { GenerateClothingNameOutput } from '@/ai/flows/generate-clothing-na
 
 export async function handleIdentifyAttributesAction(
   photoDataUri: string
+  // No Turnstile here as it's an intermediate step after image upload,
+  // The main action (adding item to closet) would be protected.
 ): Promise<IdentifyClothingAttributesOutput> {
   try {
     const result = await identifyClothingAttributes({ photoDataUri });
@@ -25,6 +29,7 @@ export async function handleIdentifyAttributesAction(
 
 export async function handleGenerateClothingNameAction(
   attributes: string[]
+   // No Turnstile here, similar to above.
 ): Promise<GenerateClothingNameOutput> {
   if (!attributes || attributes.length === 0) {
     throw new Error('衣物属性是生成名称所必需的。');
@@ -41,8 +46,15 @@ export async function handleGenerateClothingNameAction(
 export async function handleGetRecommendationAction(
   moodKeywords: string,
   weatherInformation: string,
-  clothingKeywords: string[]
+  clothingKeywords: string[],
+  turnstileToken: string | null // Added Turnstile token
 ): Promise<RecommendClothingOutput> {
+  // Verify Turnstile token
+  const isHuman = await verifyTurnstileToken(turnstileToken);
+  if (!isHuman) {
+    throw new Error('人机验证失败，请刷新页面后重试。');
+  }
+
   if (!moodKeywords || !weatherInformation || clothingKeywords.length === 0) {
     throw new Error('心情、天气和至少一件衣物是获取推荐所必需的。');
   }
@@ -63,8 +75,15 @@ export async function handleGetRecommendationAction(
 export async function handleExploreOutfitAction(
   selectedNewItems: string[],
   moodKeywords: string,
-  weatherInformation: string
+  weatherInformation: string,
+  turnstileToken: string | null // Added Turnstile token
 ): Promise<RecommendNewOutfitOutput> {
+  // Verify Turnstile token
+  const isHuman = await verifyTurnstileToken(turnstileToken);
+  if (!isHuman) {
+    throw new Error('人机验证失败，请刷新页面后重试。');
+  }
+
   if (selectedNewItems.length === 0 || !moodKeywords || !weatherInformation) {
     throw new Error('探索物品、心情和天气信息都是必需的。');
   }
@@ -83,6 +102,10 @@ export async function handleExploreOutfitAction(
 
 export async function handleGenerateOutfitImageAction(
   outfitDescription: string
+  // This action is typically called after a successful primary action (like handleExploreOutfitAction)
+  // which would have already been protected by Turnstile.
+  // If called directly from client in a new context, it would need its own protection.
+  // For now, assuming it's part of a larger protected flow.
 ): Promise<GenerateOutfitImageOutput> {
   if (!outfitDescription) {
     throw new Error('缺少服装描述，无法生成图片。');
@@ -92,7 +115,6 @@ export async function handleGenerateOutfitImageAction(
     return result;
   } catch (error) {
     console.error('Error generating outfit image:', error);
-    // It's helpful to indicate that safety filters might be an issue.
     if (error instanceof Error && error.message.includes('SAFETY')) {
        throw new Error('图片生成失败，可能由于内容安全策略。请尝试不同的描述或搭配。');
     }

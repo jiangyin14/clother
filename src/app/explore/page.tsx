@@ -16,11 +16,12 @@ import { EXPLORABLE_ITEMS, MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants
 import type { ExplorableItem } from '@/lib/definitions';
 import { handleExploreOutfitAction, handleGenerateOutfitImageAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
 
 export default function ExplorePage() {
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [selectedWeather, setSelectedWeather] = useState<string>(''); // Initial empty, will be auto-filled
+  const [selectedWeather, setSelectedWeather] = useState<string>(''); 
   const [outfitRecommendation, setOutfitRecommendation] = useState<string | null>(null);
   const [outfitImagePromptDetails, setOutfitImagePromptDetails] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -28,6 +29,8 @@ export default function ExplorePage() {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // Turnstile token state
+
 
   const { toast } = useToast();
 
@@ -42,6 +45,10 @@ export default function ExplorePage() {
   };
 
   const generateNewOutfit = useCallback(async (isRefresh: boolean = false) => {
+    if (!turnstileToken) {
+      toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
+      return;
+    }
     if (selectedItems.length === 0) {
       toast({ title: "未选择物品", description: "请至少选择一个你想探索的衣物类型。", variant: "destructive" });
       return;
@@ -56,8 +63,8 @@ export default function ExplorePage() {
     }
 
     setIsLoadingRecommendation(true);
-    setIsLoadingImage(true); // Assume image will be generated too
-    if (!isRefresh) { // Only reset if not a refresh, to keep previous result visible during refresh
+    setIsLoadingImage(true); 
+    if (!isRefresh) { 
         setOutfitRecommendation(null);
         setGeneratedImageUrl(null);
         setOutfitImagePromptDetails(null);
@@ -69,7 +76,7 @@ export default function ExplorePage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather);
+      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, turnstileToken);
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       if (!isRefresh) {
@@ -83,7 +90,7 @@ export default function ExplorePage() {
         setGeneratedImageUrl(imageResult.imageDataUri);
         toast({ title: "图片已生成！", description: "看看AI渲染的效果图。" });
       } else {
-         setGeneratedImageUrl(null); // Clear previous image if no new prompt
+         setGeneratedImageUrl(null); 
       }
 
     } catch (error) {
@@ -92,12 +99,12 @@ export default function ExplorePage() {
         description: error instanceof Error ? error.message : '发生未知错误。',
         variant: 'destructive',
       });
-       if (!isRefresh) setShowResults(false); // Hide results section if initial fetch failed
+       if (!isRefresh) setShowResults(false); 
     } finally {
       setIsLoadingRecommendation(false);
       setIsLoadingImage(false);
     }
-  }, [selectedItems, selectedMoods, selectedWeather, toast]);
+  }, [selectedItems, selectedMoods, selectedWeather, toast, turnstileToken]);
 
 
   if (!clientLoaded) {
@@ -108,7 +115,7 @@ export default function ExplorePage() {
     );
   }
 
-  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather;
+  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather && !!turnstileToken;
 
   return (
     <div className="container mx-auto font-sans">
@@ -173,7 +180,17 @@ export default function ExplorePage() {
           
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">3. 生成搭配</CardTitle>
+              <CardTitle className="text-xl">3. 人机验证</CardTitle>
+               <CardDescription>请完成验证以获取建议。</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <TurnstileWidget onTokenChange={setTurnstileToken} />
+            </CardContent>
+          </Card>
+          
+          <Card className="shadow-lg rounded-xl">
+            <CardHeader>
+              <CardTitle className="text-xl">4. 生成搭配</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
