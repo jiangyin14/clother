@@ -2,16 +2,17 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link" // Import Link for navigation
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button" // Keep Button for SidebarTrigger
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet" // Keep SheetTitle for potential future use or if Sidebar itself provides a title context
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -71,8 +72,6 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile()
     const [openMobile, setOpenMobile] = React.useState(false)
 
-    // This is the internal state of the sidebar.
-    // We use openProp and setOpenProp for control from outside the component.
     const [_open, _setOpen] = React.useState(defaultOpen)
     const open = openProp ?? _open
     const setOpen = React.useCallback(
@@ -83,21 +82,17 @@ const SidebarProvider = React.forwardRef<
         } else {
           _setOpen(openState)
         }
-
-        // This sets the cookie to keep the sidebar state.
         document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
       },
       [setOpenProp, open]
     )
 
-    // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
       return isMobile
         ? setOpenMobile((open) => !open)
         : setOpen((open) => !open)
     }, [isMobile, setOpen, setOpenMobile])
 
-    // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
@@ -113,8 +108,6 @@ const SidebarProvider = React.forwardRef<
       return () => window.removeEventListener("keydown", handleKeyDown)
     }, [toggleSidebar])
 
-    // We add a state so that we can do data-state="expanded" or "collapsed".
-    // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed"
 
     const contextValue = React.useMemo<SidebarContext>(
@@ -207,6 +200,11 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
+            {/* The SheetContent itself needs a DialogTitle for accessibility.
+                This should ideally be handled by the children passed to it,
+                or by having a dedicated title prop for the Sidebar that it
+                can render here as SheetTitle.
+            */}
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
@@ -222,7 +220,6 @@ const Sidebar = React.forwardRef<
         data-variant={variant}
         data-side={side}
       >
-        {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cn(
             "duration-200 relative h-svh w-[--sidebar-width] bg-transparent transition-[width] ease-linear",
@@ -239,7 +236,6 @@ const Sidebar = React.forwardRef<
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
-            // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]"
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -261,26 +257,26 @@ const Sidebar = React.forwardRef<
 Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
-  React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, children, asChild, ...props }, ref) => {
+  HTMLButtonElement,
+  // Omit asChild, it will always be a button
+  Omit<React.ComponentPropsWithoutRef<typeof Button>, "asChild"> 
+>(({ className, onClick, children, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
 
   return (
     <Button
       ref={ref}
       data-sidebar="trigger"
-      variant={asChild ? undefined : "ghost"}
-      size={asChild ? undefined : "icon"}
-      className={cn(!asChild && "h-7 w-7", className)}
+      variant="ghost" // Default variant, can be overridden by props
+      size="icon"     // Default size, can be overridden by props
+      className={cn(className)} // Removed default h-7 w-7, rely on size="icon" and user override
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
-      asChild={asChild}
-      {...props}
+      {...props} 
     >
-      {asChild ? children : (
+      {children ? children : (
         <>
           <PanelLeft />
           <span className="sr-only">Toggle Sidebar</span>
@@ -358,7 +354,7 @@ SidebarInput.displayName = "SidebarInput"
 
 const SidebarHeader = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div">
+  React.HTMLAttributes<HTMLDivElement> // Changed from React.ComponentProps<"div"> to HTMLAttributes for wider compatibility
 >(({ className, ...props }, ref) => {
   return (
     <div
@@ -373,7 +369,7 @@ SidebarHeader.displayName = "SidebarHeader"
 
 const SidebarFooter = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div">
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
   return (
     <div
@@ -403,7 +399,7 @@ SidebarSeparator.displayName = "SidebarSeparator"
 
 const SidebarContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div">
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
   return (
     <div
@@ -467,7 +463,6 @@ const SidebarGroupAction = React.forwardRef<
       data-sidebar="group-action"
       className={cn(
         "absolute right-3 top-3.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases the hit area of the button on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "group-data-[collapsible=icon]:hidden",
         className
@@ -518,7 +513,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary data-[active=true]:font-medium data-[active=true]:text-sidebar-primary-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -529,7 +524,7 @@ const sidebarMenuButtonVariants = cva(
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0", // Changed to !p-0 for lg icon
       },
     },
     defaultVariants: {
@@ -539,66 +534,69 @@ const sidebarMenuButtonVariants = cva(
   }
 )
 
+interface SidebarMenuButtonPropsBase extends VariantProps<typeof sidebarMenuButtonVariants> {
+  isActive?: boolean;
+  tooltip?: string | Omit<React.ComponentProps<typeof TooltipContent>, 'children'> & { children?: React.ReactNode }; // Allow complex tooltip content
+  children: React.ReactNode;
+  className?: string;
+}
+
+// Discriminated union for props based on whether 'href' is present
+type SidebarMenuButtonConditionalProps =
+  | (Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className'> & { href: string; onClick?: never; }) // Link specific props, href is required
+  | (Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'> & { href?: never; }); // Button specific props, onClick is expected if not a link
+
+export type SidebarMenuButtonProps = SidebarMenuButtonPropsBase & SidebarMenuButtonConditionalProps;
+
+
 const SidebarMenuButton = React.forwardRef<
-  HTMLButtonElement, // The ref type should match the element being rendered or the element type of the child if asChild
-  React.ComponentProps<"button"> & { // Base props from button
-    asChild?: boolean
-    isActive?: boolean
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>
-  } & VariantProps<typeof sidebarMenuButtonVariants>
+  HTMLAnchorElement | HTMLButtonElement,
+  SidebarMenuButtonProps
 >(
   (
     {
-      asChild = false,
+      variant,
+      size,
       isActive = false,
-      variant, // Destructure variant and size to pass to cva
-      size,   // Destructure variant and size to pass to cva
       tooltip,
       className,
       children,
-      ...props // Remaining props
+      href,
+      ...props
     },
     ref
   ) => {
-    const { isMobile, state } = useSidebar()
-    const combinedClassName = cn(sidebarMenuButtonVariants({ variant, size, className }))
+    const { isMobile, state } = useSidebar();
+    const commonClassNames = cn(sidebarMenuButtonVariants({ variant, size, className }));
+    
+    const commonDataAttributes = {
+      'data-active': isActive,
+      'data-size': size,
+      'data-sidebar': "menu-button",
+    };
 
-    let triggerElement: React.ReactElement;
+    let element: JSX.Element;
 
-    if (asChild) {
-      if (!React.isValidElement(children)) {
-        // In a real app, you might throw an error or log a warning
-        // For now, we'll just render a span, but this indicates incorrect usage
-        triggerElement = (
-          <span ref={ref as React.Ref<HTMLSpanElement>} className={combinedClassName} {...props}>
-            Error: asChild requires a valid React element child
-          </span>
-        );
-      } else {
-        // Clone the child (e.g., Link) and merge props
-        // The child is responsible for handling the ref if it's a component
-        triggerElement = React.cloneElement(children, {
-          // @ts-ignore if children is a DOM element, this works. If it's a component, it must accept ref.
-          ref: ref, 
-          className: cn(children.props.className, combinedClassName),
-          "data-active": isActive, // Ensure data-active is applied
-          "data-size": size, // Ensure data-size is applied
-          "data-sidebar": "menu-button", // Ensure data-sidebar is applied
-          // Spread other props. Ensure children's own props are not clobbered unless intended.
-          ...props, 
-          ...children.props, // children's props come last to ensure they can override if necessary (e.g. specific onClick)
-        });
-      }
+    if (href) {
+      element = (
+        <Link
+          href={href}
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          className={commonClassNames}
+          {...commonDataAttributes}
+          {...(props as Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className'>)} // Spread link-specific props
+        >
+          {children}
+        </Link>
+      );
     } else {
-      // Not asChild, render a <button>
-      triggerElement = (
+      element = (
         <button
-          ref={ref}
-          className={combinedClassName}
-          data-active={isActive}
-          data-size={size}
-          data-sidebar="menu-button"
-          {...props}
+          type="button"
+          ref={ref as React.Ref<HTMLButtonElement>}
+          className={commonClassNames}
+          {...commonDataAttributes}
+          {...(props as Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'>)} // Spread button-specific props
         >
           {children}
         </button>
@@ -606,25 +604,30 @@ const SidebarMenuButton = React.forwardRef<
     }
 
     if (!tooltip) {
-      return triggerElement;
+      return element;
     }
-
-    const tooltipContentProps = typeof tooltip === 'string' ? { children: tooltip } : tooltip;
     
+    const tooltipContentChildren = typeof tooltip === 'string' ? tooltip : tooltip.children;
+    const tooltipContentProps = typeof tooltip === 'object' ? { ...tooltip, children: undefined } : {};
+
+
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{triggerElement}</TooltipTrigger>
+        <TooltipTrigger asChild>{element}</TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
           hidden={state !== "collapsed" || isMobile}
-          {...tooltipContentProps} // Spread the content props here
-        />
+          {...tooltipContentProps} 
+        >
+          {tooltipContentChildren}
+        </TooltipContent>
       </Tooltip>
-    )
+    );
   }
-)
-SidebarMenuButton.displayName = "SidebarMenuButton"
+);
+SidebarMenuButton.displayName = "SidebarMenuButton";
+
 
 const SidebarMenuAction = React.forwardRef<
   HTMLButtonElement,
@@ -641,7 +644,6 @@ const SidebarMenuAction = React.forwardRef<
       data-sidebar="menu-action"
       className={cn(
         "absolute right-1 top-1.5 flex aspect-square w-5 items-center justify-center rounded-md p-0 text-sidebar-foreground outline-none ring-sidebar-ring transition-transform hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 peer-hover/menu-button:text-sidebar-accent-foreground [&>svg]:size-4 [&>svg]:shrink-0",
-        // Increases the hit area of the button on mobile.
         "after:absolute after:-inset-2 after:md:hidden",
         "peer-data-[size=sm]/menu-button:top-1",
         "peer-data-[size=default]/menu-button:top-1.5",
@@ -684,7 +686,6 @@ const SidebarMenuSkeleton = React.forwardRef<
     showIcon?: boolean
   }
 >(({ className, showIcon = false, ...props }, ref) => {
-  // Random width between 50 to 90%.
   const width = React.useMemo(() => {
     return `${Math.floor(Math.random() * 40) + 50}%`
   }, [])
@@ -740,9 +741,9 @@ const SidebarMenuSubItem = React.forwardRef<
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 const SidebarMenuSubButton = React.forwardRef<
-  HTMLAnchorElement,
+  HTMLAnchorElement, // Assuming it's primarily for navigation
   React.ComponentProps<"a"> & {
-    asChild?: boolean
+    asChild?: boolean // Keeping asChild for flexibility if needed for sub-buttons, though less common
     size?: "sm" | "md"
     isActive?: boolean
   }
@@ -795,3 +796,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+    
