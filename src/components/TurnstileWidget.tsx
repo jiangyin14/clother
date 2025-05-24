@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -51,12 +50,62 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
       return;
     }
 
-    // Clean up previous widget if it exists for this ref
-    if (widgetIdRef.current) {
-      try {
-        window.turnstile.remove(widgetIdRef.current);
-      } catch (e) {
-        // console.warn('Turnstile: Failed to remove previous widget:', e);
+
+    let attempts = 0;
+    const maxAttempts = 10;
+    const intervalTime = 500; // ms
+
+    const tryRenderWidget = () => {
+      if (window.turnstile && turnstileContainerRef.current) {
+        // or if a widget was rendered by other means.
+        if (turnstileContainerRef.current.innerHTML !== '') {
+          turnstileContainerRef.current.innerHTML = ''; // Be cautious with this, might interfere
+        }
+        const newWidgetId = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: actualSiteKey,
+          callback: (token: string) => {
+            onTokenChange(token);
+          },
+          'error-callback': () => {
+            console.error('Turnstile error callback triggered.');
+            onTokenChange(null);
+          },
+          'expired-callback': () => {
+            console.warn('Turnstile token expired. Resetting widget.');
+            onTokenChange(null);
+            if (widgetId) {
+              window.turnstile.reset(widgetId);
+            }
+          },
+          theme: theme,
+        });
+        setWidgetId(newWidgetId);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(tryRenderWidget, intervalTime);
+      } else {
+        console.error('Failed to render Turnstile widget after multiple attempts. Is the script loaded?');
+        onTokenChange(null);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      // If script is already loaded (e.g. by another instance), try rendering directly
+      if (window.turnstile) {
+        tryRenderWidget();
+      } else {
+        // Wait for script to load via next/script, then render
+        // The Script component's onLoad will handle this, but we need a fallback.
+        // This explicit call is more for cases where the script might load but onLoad isn't immediately fired or state changes.
+        const scriptElement = document.querySelector('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"]');
+        if (scriptElement) {
+          scriptElement.addEventListener('load', tryRenderWidget);
+          return () => scriptElement.removeEventListener('load', tryRenderWidget);
+        } else {
+          // If script isn't even in DOM yet, next/script should handle it.
+          // This branch is less likely if next/script is used correctly.
+        }
+
       }
       widgetIdRef.current = null;
     }
