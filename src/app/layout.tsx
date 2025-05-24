@@ -16,12 +16,12 @@ import {
 } from '@/components/ui/sidebar';
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
-import { Home, Compass, PanelLeft, UserCircle, Shirt } from 'lucide-react'; // Added Shirt
+import { Home, Compass, PanelLeft, UserCircle, Shirt } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
-// Removed SheetTitle import as it's not directly used here anymore for the main header
+
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -51,7 +51,6 @@ export default async function RootLayout({
         <SidebarProvider defaultOpen>
           <Sidebar collapsible="icon">
             <SidebarHeader className="p-4">
-              {/* AppLogo is rendered directly. Mobile sheet title is handled by Sidebar component or needs specific prop. */}
               <AppLogo />
             </SidebarHeader>
             <SidebarContent>
@@ -61,10 +60,8 @@ export default async function RootLayout({
                     href="/" 
                     tooltip={{children: "推荐", side: "right", align: "center" }}
                   >
-                    <span className="flex items-center gap-2">
-                      <Home />
-                      <span>推荐</span>
-                    </span>
+                    <Home />
+                    <span>推荐</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
@@ -72,10 +69,8 @@ export default async function RootLayout({
                     href="/closet" 
                     tooltip={{children: "我的衣橱", side: "right", align: "center" }}
                   >
-                     <span className="flex items-center gap-2">
-                      <Shirt /> {/* Icon for Closet */}
-                      <span>衣橱</span>
-                    </span>
+                     <Shirt /> 
+                     <span>衣橱</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
@@ -83,10 +78,8 @@ export default async function RootLayout({
                     href="/explore" 
                     tooltip={{children: "探索", side: "right", align: "center" }}
                   >
-                     <span className="flex items-center gap-2">
-                      <Compass />
-                      <span>探索</span>
-                    </span>
+                     <Compass />
+                     <span>探索</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                  {user && (
@@ -95,10 +88,8 @@ export default async function RootLayout({
                       href="/profile"
                       tooltip={{ children: "用户中心", side: "right", align: "center" }}
                     >
-                      <span className="flex items-center gap-2">
-                        <UserCircle />
-                        <span>用户中心</span>
-                      </span>
+                      <UserCircle />
+                      <span>用户中心</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
@@ -110,7 +101,6 @@ export default async function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
-              {/* SidebarTrigger for mobile, no asChild here after component refactor */}
               <SidebarTrigger>
                 <span className="flex items-center justify-center">
                    <PanelLeft className="h-5 w-5" />
@@ -122,7 +112,14 @@ export default async function RootLayout({
             </header>
             <main className="flex-1 p-4 sm:p-6">
               {children}
+              {/* 页脚移到 main 外部，以确保它在所有页面内容下方 */}
             </main>
+             <footer className="w-full border-t border-border bg-background p-4 text-center text-xs text-muted-foreground">
+              <p>&copy; {new Date().getFullYear()} Clother (衣者). 由 AI 驱动.</p>
+              <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                皖ICP备2024050771号
+              </a>
+            </footer>
           </SidebarInset>
         </SidebarProvider>
         <Toaster />
