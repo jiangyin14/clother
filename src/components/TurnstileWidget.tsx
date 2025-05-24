@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -9,6 +8,7 @@ interface TurnstileWidgetProps {
   siteKey?: string;
   theme?: 'light' | 'dark' | 'auto';
   className?: string;
+  resetTrigger?: number; // New prop
 }
 
 declare global {
@@ -39,6 +39,7 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
   siteKey,
   theme = 'auto',
   className,
+  resetTrigger, // Destructure new prop
 }) => {
   const turnstileContainerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -118,7 +119,7 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
         widgetIdRef.current = null;
       }
     };
-  }, [isScriptLoaded, renderWidget]); // renderWidget is memoized
+  }, [isScriptLoaded, renderWidget, resetTrigger]); // Add resetTrigger to dependency array
 
   if (!actualSiteKey) {
     return <div className={className} style={{ minHeight: '65px', border:'1px dashed gray', padding: '10px', display:'flex', alignItems:'center', justifyContent:'center', color: 'hsl(var(--destructive))' }}>Turnstile 站点密钥未配置。</div>;

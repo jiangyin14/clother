@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -11,6 +10,7 @@ interface CaptchaWidgetProps {
   theme?: 'light' | 'dark';
   size?: 'normal' | 'compact' | 'invisible';
   className?: string; // For the outer container, allowing responsive scaling
+  resetTrigger?: number; // New prop
 }
 
 declare global {
@@ -46,6 +46,7 @@ const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
   theme = 'light', // hCaptcha default is light
   size = 'normal',
   className,
+  resetTrigger, // Destructure new prop
 }) => {
   const captchaContainerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -135,7 +136,7 @@ const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
         widgetIdRef.current = null;
       }
     };
-  }, [isApiReady, renderCaptcha]);
+  }, [isApiReady, renderCaptcha, resetTrigger]); // Add resetTrigger to dependency array
 
   if (!actualSiteKey) {
     return (

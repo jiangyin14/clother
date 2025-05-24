@@ -1,9 +1,8 @@
-
 'use client';
 
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
-import { useActionState, useState } from 'react';
+import { useActionState, useState, useEffect } from 'react';
 import { login } from '@/actions/userActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,16 @@ export default function LoginPage() {
   const [state, dispatch] = useActionState(login, undefined);
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0); // New state
+
+  // Effect to reset CAPTCHA when form state changes (e.g., after submission)
+  useEffect(() => {
+    if (state) { // Check if state is not undefined (meaning a submission attempt happened)
+      setCaptchaToken(null); // Clear previous token
+      setCaptchaResetTrigger(prev => prev + 1); // Trigger CAPTCHA reset
+    }
+  }, [state]);
 
   return (
     <Card className="shadow-xl">
@@ -63,8 +71,12 @@ export default function LoginPage() {
           
           <div className="space-y-2">
             <Label>人机验证</Label>
-            <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
-            <input type="hidden" name="captchaToken" value={captchaToken || ''} /> {/* Renamed */}
+            <CaptchaWidget
+              onTokenChange={setCaptchaToken}
+              className="mx-auto"
+              resetTrigger={captchaResetTrigger} // Pass the trigger
+            />
+            <input type="hidden" name="captchaToken" value={captchaToken || ''} />
             {state?.errors?.captchaToken && <p className="text-sm text-destructive">{state.errors.captchaToken.join(', ')}</p>}
           </div>
 
