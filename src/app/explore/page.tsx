@@ -138,7 +138,7 @@ export default function ExplorePage() {
         <div className="lg:col-span-4 space-y-8">
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">1. 选择探索元素</CardTitle>
+              <CardTitle className="text-xl">选择探索元素</CardTitle>
               <CardDescription>勾选你想要尝试的衣物、风格或配饰，激发AI的创意火花。</CardDescription>
             </CardHeader>
             <CardContent>

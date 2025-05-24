@@ -194,7 +194,7 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
   return (
     <Card className="shadow-lg rounded-xl">
       <CardHeader>
-        <CardTitle className="text-xl">2. 设置您的场景</CardTitle>
+        <CardTitle className="text-xl">设置您的场景</CardTitle>
         <CardDescription>选择心情，自动获取或手动设定天气以获得最佳服装推荐。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
