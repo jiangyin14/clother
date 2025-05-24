@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   const user = session.user;
 
   // If trying to access a protected route and not logged in, redirect to login
-  if (!user && !isPublicPath.some(path => pathname.startsWith(path)) && !isApiAuthRoute && !isStaticAsset) {
+  if (!user && !publicPaths.some(path => pathname.startsWith(path)) && !isApiAuthRoute && !isStaticAsset) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect_to', pathname); // Optionally add redirect_to for better UX
     return NextResponse.redirect(loginUrl);
@@ -64,3 +64,4 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
+
