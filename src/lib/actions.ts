@@ -5,6 +5,7 @@ import { recommendClothing } from '@/ai/flows/recommend-clothing-based-on-mood-a
 import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
 import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
+import { generateExplorableItems } from '@/ai/flows/generate-explorable-items-flow'; // Import new flow
 import { getClosetItems } from '@/actions/closetActions'; 
 import { getUserFromSession } from '@/actions/userActions'; 
 
@@ -12,7 +13,8 @@ import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-cloth
 import type { RecommendNewOutfitOutput } from '@/ai/flows/recommend-new-outfit-flow';
 import type { GenerateOutfitImageOutput } from '@/ai/flows/generate-outfit-image-flow';
 import type { GenerateClothingNameOutput } from '@/ai/flows/generate-clothing-name-flow';
-import type { RecommendClothingOutput } from '@/lib/definitions';
+import type { RecommendClothingOutput, ExplorableItem } from '@/lib/definitions'; // ExplorableItem for return type
+// Removed GenerateExplorableItemsOutput import as we process it internally
 
 export async function handleIdentifyAttributesAction(
   photoDataUri: string
@@ -50,7 +52,7 @@ export async function handleGenerateClothingNameAction(
 export async function handleGetRecommendationAction(
   moodKeywords: string,
   weatherInformation: string,
-  creativityLevel: number // 新增参数
+  creativityLevel: number
 ): Promise<RecommendClothingOutput & { error?: string }> {
   if (!moodKeywords || !weatherInformation ) {
     throw new Error('心情和天气信息是获取推荐所必需的。');
@@ -85,7 +87,7 @@ export async function handleGetRecommendationAction(
       clothingKeywords: allAttributes,
       userGender: user?.gender || undefined, 
       userAge: user?.age || undefined,
-      creativityLevel, // 传递给AI流程       
+      creativityLevel,      
     });
     
     return {
@@ -105,7 +107,7 @@ export async function handleExploreOutfitAction(
   selectedNewItems: string[],
   moodKeywords: string,
   weatherInformation: string,
-  creativityLevel: number // 新增参数
+  creativityLevel: number 
 ): Promise<RecommendNewOutfitOutput> {
   if (selectedNewItems.length === 0 || !moodKeywords || !weatherInformation) {
     throw new Error('探索物品、心情和天气信息都是必需的。');
@@ -121,7 +123,7 @@ export async function handleExploreOutfitAction(
       weatherInformation,
       userGender: user?.gender || undefined, 
       userAge: user?.age || undefined,
-      creativityLevel, // 传递给AI流程       
+      creativityLevel,      
     });
     return result; 
   } catch (error) {
@@ -172,5 +174,24 @@ export async function handleGenerateOutfitImageAction(
       throw new Error(`生成服装图片失败: ${error.message}`);
     }
     throw new Error('生成服装图片时发生未知错误。');
+  }
+}
+
+export async function handleGenerateExplorableItemsAction(count: number = 10): Promise<ExplorableItem[]> {
+  try {
+    const result = await generateExplorableItems({ count });
+    // Add a simple client-side ID to each item
+    return result.items.map((item, index) => ({
+      id: `gen-item-${Date.now()}-${index}`, // Create a somewhat unique ID for client-side keying
+      name: item.name,
+      description: item.description,
+      category: 'Generated', // Or try to get category from LLM if prompt is enhanced
+    }));
+  } catch (error) {
+    console.error('Error in handleGenerateExplorableItemsAction:', error);
+    if (error instanceof Error) {
+      throw new Error(`生成探索元素失败: ${error.message}`);
+    }
+    throw new Error('生成探索元素时发生未知错误。');
   }
 }

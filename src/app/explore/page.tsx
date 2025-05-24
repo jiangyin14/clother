@@ -5,24 +5,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Sparkles, Image as ImageIcon, Wand2, RefreshCw, Search } from 'lucide-react';
+import { Loader2, Sparkles, Image as ImageIcon, Wand2, RefreshCw, Search, CheckCircle2, ThumbsUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MoodWeatherInput from '@/components/MoodWeatherInput';
-import CreativitySlider from '@/components/CreativitySlider'; // 新增导入
-import { EXPLORABLE_ITEMS, MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants';
+import CreativitySlider from '@/components/CreativitySlider';
+import { MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants';
 import type { ExplorableItem } from '@/lib/definitions';
-import { handleExploreOutfitAction, handleGenerateOutfitImageAction } from '@/lib/actions';
+import { handleExploreOutfitAction, handleGenerateOutfitImageAction, handleGenerateExplorableItemsAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function ExplorePage() {
+  const [explorableItems, setExplorableItems] = useState<ExplorableItem[]>([]);
+  const [isLoadingExplorable, setIsLoadingExplorable] = useState(true);
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedWeather, setSelectedWeather] = useState<string>(''); 
-  const [creativityLevel, setCreativityLevel] = useState<number>(5); // 新增状态
+  const [creativityLevel, setCreativityLevel] = useState<number>(5);
   const [outfitRecommendation, setOutfitRecommendation] = useState<string | null>(null);
   const [outfitImagePromptDetails, setOutfitImagePromptDetails] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -37,9 +39,35 @@ export default function ExplorePage() {
     setClientLoaded(true);
   }, []);
 
-  const handleItemSelection = (item: ExplorableItem, checked: boolean) => {
+  const fetchExplorableItems = useCallback(async () => {
+    setIsLoadingExplorable(true);
+    try {
+      const items = await handleGenerateExplorableItemsAction(12); // Generate 12 items
+      setExplorableItems(items);
+      setSelectedItems([]); // Clear previous selections when fetching new items
+    } catch (error) {
+      toast({
+        title: "获取探索元素失败",
+        description: error instanceof Error ? error.message : "无法连接到服务器获取探索灵感。",
+        variant: "destructive",
+      });
+      setExplorableItems([]); // Set to empty array on error
+    } finally {
+      setIsLoadingExplorable(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (clientLoaded) {
+      fetchExplorableItems();
+    }
+  }, [clientLoaded, fetchExplorableItems]);
+
+  const handleItemSelection = (itemToToggle: ExplorableItem) => {
     setSelectedItems(prev =>
-      checked ? [...prev, item] : prev.filter(i => i.id !== item.id)
+      prev.find(item => item.id === itemToToggle.id)
+        ? prev.filter(i => i.id !== itemToToggle.id)
+        : [...prev, itemToToggle]
     );
   };
 
@@ -70,7 +98,7 @@ export default function ExplorePage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, creativityLevel); // 传递creativityLevel
+      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, creativityLevel);
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       if (!isRefresh) {
@@ -82,9 +110,6 @@ export default function ExplorePage() {
       if (result.imagePromptDetails) {
         const imageResult = await handleGenerateOutfitImageAction(result.imagePromptDetails);
         setGeneratedImageUrl(imageResult.imageDataUri);
-        // Toast for image generation might be too frequent if recommendation and image generation are separate.
-        // Only show if specifically relevant or for final success.
-        // toast({ title: "图片已生成！", description: "看看AI渲染的效果图。" });
       } else {
          setGeneratedImageUrl(null); 
       }
@@ -120,45 +145,84 @@ export default function ExplorePage() {
           探索新风格
         </h1>
         <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
-          选择你感兴趣的衣物、风格或配饰，结合你的心情、天气和创意偏好，让AI为你量身打造全新搭配，并生成令人惊艳的效果图。
+          选择AI为你生成的时尚灵感，结合你的心情、天气和创意偏好，打造全新搭配并生成效果图。
         </p>
       </header>
 
       <Separator className="my-8" />
 
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
-        <div className="lg:col-span-4 space-y-8">
+        <div className="lg:col-span-4 space-y-6">
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">1. 选择探索元素</CardTitle>
-              <CardDescription>勾选你想要尝试的衣物、风格或配饰，激发AI的创意火花。</CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-xl">1. 选择探索灵感</CardTitle>
+                  <CardDescription>勾选你想要尝试的时尚元素，激发AI的创意火花。</CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={fetchExplorableItems} 
+                  disabled={isLoadingExplorable}
+                  className="rounded-lg"
+                >
+                  {isLoadingExplorable ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  换一批灵感
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[50px]"></TableHead>
-                    <TableHead>名称</TableHead>
-                    <TableHead>描述</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {EXPLORABLE_ITEMS.map(item => (
-                    <TableRow key={item.id} data-state={selectedItems.some(si => si.id === item.id) ? 'selected' : ''} className="data-[state=selected]:bg-primary/10">
-                      <TableCell>
-                        <Checkbox
-                          id={`item-${item.id}`}
-                          checked={selectedItems.some(si => si.id === item.id)}
-                          onCheckedChange={(checked) => handleItemSelection(item, !!checked)}
-                          aria-label={`选择 ${item.name}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{item.description}</TableCell>
-                    </TableRow>
+              {isLoadingExplorable ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <Card key={i} className="h-[180px] flex flex-col justify-between p-4 rounded-lg">
+                      <Skeleton className="h-5 w-3/4 mb-2" />
+                      <Skeleton className="h-3 w-full mb-1" />
+                      <Skeleton className="h-3 w-5/6 mb-3" />
+                      <Skeleton className="h-8 w-full rounded-md" />
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              ) : explorableItems.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {explorableItems.map(item => {
+                    const isSelected = selectedItems.some(si => si.id === item.id);
+                    return (
+                      <Card 
+                        key={item.id} 
+                        className={cn(
+                          "cursor-pointer hover:shadow-xl transition-all duration-200 ease-in-out flex flex-col rounded-lg overflow-hidden",
+                          isSelected ? "border-primary ring-2 ring-primary shadow-lg" : "border-border"
+                        )}
+                        onClick={() => handleItemSelection(item)}
+                      >
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-base font-semibold flex items-center justify-between">
+                            <span className="truncate pr-2">{item.name}</span>
+                            {isSelected && <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 text-xs text-muted-foreground flex-grow">
+                          <p className="line-clamp-3">{item.description}</p>
+                        </CardContent>
+                        <CardFooter className="p-3 pt-2 mt-auto border-t">
+                           <Button 
+                              variant={isSelected ? "default" : "outline"} 
+                              size="sm" 
+                              className="w-full text-xs rounded-md"
+                              onClick={(e) => { e.stopPropagation(); handleItemSelection(item); }} // Prevent card click if button is clicked
+                            >
+                              {isSelected ? <><ThumbsUp className="mr-1.5 h-3.5 w-3.5"/>已选择</> : '选择此项'}
+                            </Button>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">未能加载探索元素，请稍后重试或点击“换一批灵感”。</p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -173,7 +237,7 @@ export default function ExplorePage() {
             moodOptions={MOOD_OPTIONS}
           />
           
-          <CreativitySlider // 新增滑块组件
+          <CreativitySlider
             value={creativityLevel}
             onValueChange={setCreativityLevel}
             disabled={isLoadingRecommendation || isLoadingImage}
@@ -259,12 +323,12 @@ export default function ExplorePage() {
             </div>
           )}
           
-          {!showResults && !isLoadingRecommendation && !isLoadingImage && (
+          {!showResults && !isLoadingExplorable && !isLoadingRecommendation && !isLoadingImage && explorableItems.length > 0 && (
              <Card className="border-dashed border-primary/30 rounded-xl bg-primary/5">
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12 mb-3 text-primary/70" />
                 <p className="font-semibold">准备好探索你的新造型了吗？</p>
-                <p className="text-sm">选择一些元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
+                <p className="text-sm">从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
               </CardContent>
             </Card>
           )}
