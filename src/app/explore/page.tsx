@@ -12,17 +12,17 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles, Image as ImageIcon, Wand2, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MoodWeatherInput from '@/components/MoodWeatherInput';
+import CreativitySlider from '@/components/CreativitySlider'; // 新增导入
 import { EXPLORABLE_ITEMS, MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants';
 import type { ExplorableItem } from '@/lib/definitions';
 import { handleExploreOutfitAction, handleGenerateOutfitImageAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-// CaptchaWidget is no longer needed on this page
-// import CaptchaWidget from '@/components/CaptchaWidget'; 
 
 export default function ExplorePage() {
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedWeather, setSelectedWeather] = useState<string>(''); 
+  const [creativityLevel, setCreativityLevel] = useState<number>(5); // 新增状态
   const [outfitRecommendation, setOutfitRecommendation] = useState<string | null>(null);
   const [outfitImagePromptDetails, setOutfitImagePromptDetails] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -30,8 +30,6 @@ export default function ExplorePage() {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  // captchaToken is no longer needed on this page
-  // const [captchaToken, setCaptchaToken] = useState<string | null>(null); 
 
   const { toast } = useToast();
 
@@ -46,11 +44,6 @@ export default function ExplorePage() {
   };
 
   const generateNewOutfit = useCallback(async (isRefresh: boolean = false) => {
-    // Removed captchaToken check
-    // if (!captchaToken) { 
-    //   toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
-    //   return;
-    // }
     if (selectedItems.length === 0) {
       toast({ title: "未选择物品", description: "请至少选择一个你想探索的衣物类型。", variant: "destructive" });
       return;
@@ -77,8 +70,7 @@ export default function ExplorePage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      // Removed captchaToken from the call
-      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather); 
+      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, creativityLevel); // 传递creativityLevel
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       if (!isRefresh) {
@@ -90,7 +82,9 @@ export default function ExplorePage() {
       if (result.imagePromptDetails) {
         const imageResult = await handleGenerateOutfitImageAction(result.imagePromptDetails);
         setGeneratedImageUrl(imageResult.imageDataUri);
-        toast({ title: "图片已生成！", description: "看看AI渲染的效果图。" });
+        // Toast for image generation might be too frequent if recommendation and image generation are separate.
+        // Only show if specifically relevant or for final success.
+        // toast({ title: "图片已生成！", description: "看看AI渲染的效果图。" });
       } else {
          setGeneratedImageUrl(null); 
       }
@@ -106,8 +100,7 @@ export default function ExplorePage() {
       setIsLoadingRecommendation(false);
       setIsLoadingImage(false);
     }
-  // Removed captchaToken from dependencies
-  }, [selectedItems, selectedMoods, selectedWeather, toast]); 
+  }, [selectedItems, selectedMoods, selectedWeather, creativityLevel, toast]); 
 
   if (!clientLoaded) {
     return (
@@ -117,18 +110,17 @@ export default function ExplorePage() {
     );
   }
 
-  // Updated canSubmit condition
   const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather; 
 
   return (
     <div className="container mx-auto font-sans">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
+        <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl flex items-center justify-center">
           <Search className="inline-block h-10 w-10 mr-3 text-primary" />
           探索新风格
         </h1>
         <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
-          选择你感兴趣的衣物、风格或配饰，结合你的心情和天气，让AI为你量身打造全新搭配，并生成令人惊艳的效果图。
+          选择你感兴趣的衣物、风格或配饰，结合你的心情、天气和创意偏好，让AI为你量身打造全新搭配，并生成令人惊艳的效果图。
         </p>
       </header>
 
@@ -138,7 +130,7 @@ export default function ExplorePage() {
         <div className="lg:col-span-4 space-y-8">
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">选择探索元素</CardTitle>
+              <CardTitle className="text-xl">1. 选择探索元素</CardTitle>
               <CardDescription>勾选你想要尝试的衣物、风格或配饰，激发AI的创意火花。</CardDescription>
             </CardHeader>
             <CardContent>
@@ -181,23 +173,15 @@ export default function ExplorePage() {
             moodOptions={MOOD_OPTIONS}
           />
           
-          {/* CaptchaWidget and its card removed from here */}
-          {/*
+          <CreativitySlider // 新增滑块组件
+            value={creativityLevel}
+            onValueChange={setCreativityLevel}
+            disabled={isLoadingRecommendation || isLoadingImage}
+          />
+                    
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">3. 人机验证</CardTitle>
-               <CardDescription>请完成验证以获取建议。</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" />
-            </CardContent>
-          </Card>
-          */}
-          
-          <Card className="shadow-lg rounded-xl">
-            <CardHeader>
-              {/* Updated step number if captcha was step 3 */}
-              <CardTitle className="text-xl">3. 生成搭配</CardTitle> 
+              <CardTitle className="text-xl">生成搭配</CardTitle> 
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
@@ -280,7 +264,7 @@ export default function ExplorePage() {
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12 mb-3 text-primary/70" />
                 <p className="font-semibold">准备好探索你的新造型了吗？</p>
-                <p className="text-sm">选择一些元素，设定好场景，AI 将为你呈现惊喜！</p>
+                <p className="text-sm">选择一些元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
               </CardContent>
             </Card>
           )}

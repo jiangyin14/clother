@@ -10,7 +10,7 @@
  * - RecommendNewOutfitOutput - The return type for the recommendNewOutfit function.
  */
 
-import {z} from 'genkit'; 
+import {z}from 'genkit'; 
 import {
   SILICONFLOW_API_KEY,
   SILICONFLOW_API_BASE_URL,
@@ -23,6 +23,7 @@ const RecommendNewOutfitInputSchema = z.object({
   weatherInformation: z.string().describe('当前天气信息 (例如：晴朗、下雨、寒冷)。'),
   userGender: z.string().optional().describe('用户的性别，例如：男、女、其他。'),
   userAge: z.number().int().positive().optional().describe('用户的年龄。'),
+  creativityLevel: z.number().int().min(1).max(10).describe('创意程度，1-10，1表示非常保守，10表示非常大胆。此值基于1-15的评分体系。'),
 });
 export type RecommendNewOutfitInput = z.infer<typeof RecommendNewOutfitInputSchema>;
 
@@ -46,13 +47,14 @@ export async function recommendNewOutfit(input: RecommendNewOutfitInput): Promis
     personaContext = `请考虑以下用户信息以使推荐更个性化：${personaContext}\n`;
   }
 
-  const promptContent = `你是一位富有创意的AI时尚造型师。请根据用户选择的以下“探索性”单品、他们的心情以及当前天气状况，推荐一套完整的、时尚的服装搭配。
+  const promptContent = `你是一位富有创意的AI时尚造型师。请根据用户选择的以下“探索性”单品、他们的心情、当前天气状况以及指定的创意程度，推荐一套完整的、时尚的服装搭配。
 ${personaContext}
 探索性单品:
 ${validatedInput.selectedItemNames.map(item => `- ${item}`).join('\n')}
 
 用户心情: ${validatedInput.moodKeywords}
 天气状况: ${validatedInput.weatherInformation}
+创意程度: ${validatedInput.creativityLevel} (此评级基于1至15的范围，1表示非常保守和常规，10表示非常有创意和大胆，用户选择的是 ${validatedInput.creativityLevel}/15 的创意度)。请根据此创意程度调整搭配的独特性和前卫性。
 
 请提供两部分输出，格式为JSON对象，包含 description 和 imagePromptDetails 字段:
 1.  **description**: 对这套推荐服装的详细描述，包括为什么这样搭配，以及它适合的场合。请用自然流畅的中文表述。

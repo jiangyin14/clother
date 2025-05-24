@@ -49,10 +49,14 @@ export async function handleGenerateClothingNameAction(
 
 export async function handleGetRecommendationAction(
   moodKeywords: string,
-  weatherInformation: string
+  weatherInformation: string,
+  creativityLevel: number // 新增参数
 ): Promise<RecommendClothingOutput & { error?: string }> {
   if (!moodKeywords || !weatherInformation ) {
     throw new Error('心情和天气信息是获取推荐所必需的。');
+  }
+  if (creativityLevel < 1 || creativityLevel > 10) {
+    throw new Error('创意程度值必须在1到10之间。');
   }
 
   try {
@@ -80,7 +84,8 @@ export async function handleGetRecommendationAction(
       weatherInformation,
       clothingKeywords: allAttributes,
       userGender: user?.gender || undefined, 
-      userAge: user?.age || undefined,       
+      userAge: user?.age || undefined,
+      creativityLevel, // 传递给AI流程       
     });
     
     return {
@@ -99,10 +104,14 @@ export async function handleGetRecommendationAction(
 export async function handleExploreOutfitAction(
   selectedNewItems: string[],
   moodKeywords: string,
-  weatherInformation: string
+  weatherInformation: string,
+  creativityLevel: number // 新增参数
 ): Promise<RecommendNewOutfitOutput> {
   if (selectedNewItems.length === 0 || !moodKeywords || !weatherInformation) {
     throw new Error('探索物品、心情和天气信息都是必需的。');
+  }
+  if (creativityLevel < 1 || creativityLevel > 10) {
+    throw new Error('创意程度值必须在1到10之间。');
   }
   try {
     const user = await getUserFromSession(); 
@@ -111,7 +120,8 @@ export async function handleExploreOutfitAction(
       moodKeywords,
       weatherInformation,
       userGender: user?.gender || undefined, 
-      userAge: user?.age || undefined,       
+      userAge: user?.age || undefined,
+      creativityLevel, // 传递给AI流程       
     });
     return result; 
   } catch (error) {
@@ -153,13 +163,14 @@ export async function handleGenerateOutfitImageAction(
   } catch (error) {
     console.error('Error in handleGenerateOutfitImageAction calling generateOutfitImage:', error);
     if (error instanceof Error) {
-       // Check for specific configuration error messages from the flow
       if (error.message.includes('API Key配置不正确') || error.message.includes('API基础URL配置不正确')) {
-        throw error; // Re-throw specific config errors as is
+        throw error;
+      }
+       if (error.message.includes("SAFETY_FILTER_TRIGGERED") || error.message.includes("prompt violates safety policy")) {
+         throw new Error(`图片生成失败，提示词可能触发了内容安全策略。请尝试调整描述。`);
       }
       throw new Error(`生成服装图片失败: ${error.message}`);
     }
     throw new Error('生成服装图片时发生未知错误。');
   }
 }
-

@@ -25,6 +25,7 @@ const RecommendClothingInputSchema = z.object({
   clothingKeywords: z.array(z.string()).describe('描述可选衣物的关键词 (中文)。'),
   userGender: z.string().optional().describe('用户的性别，例如：男、女、其他。'),
   userAge: z.number().int().positive().optional().describe('用户的年龄。'),
+  creativityLevel: z.number().int().min(1).max(10).describe('创意程度，1-10，1表示非常保守，10表示非常大胆。此值基于1-15的评分体系。'),
 });
 export type RecommendClothingInput = z.infer<typeof RecommendClothingInputSchema>;
 
@@ -49,11 +50,12 @@ export async function recommendClothing(input: RecommendClothingInput): Promise<
     personaContext = `请考虑以下用户信息以使推荐更个性化：${personaContext}\n`;
   }
 
-  const promptContent = `你是一位AI时尚造型师。请根据用户的心情、当前天气状况以及他们衣橱中的可选衣物，推荐一套完整的、时尚的服装搭配。
+  const promptContent = `你是一位AI时尚造型师。请根据用户的心情、当前天气状况、他们衣橱中的可选衣物以及指定的创意程度，推荐一套完整的、时尚的服装搭配。
 ${personaContext}
 用户心情: ${validatedInput.moodKeywords}
 天气状况: ${validatedInput.weatherInformation}
 可选衣物 (来自用户衣橱): ${validatedInput.clothingKeywords.join(', ')}
+创意程度: ${validatedInput.creativityLevel} (此评级基于1至15的范围，1表示非常保守和常规，10表示非常有创意和大胆，用户选择的是 ${validatedInput.creativityLevel}/15 的创意度)。请根据此创意程度调整搭配的独特性和前卫性。
 
 请提供两部分输出，格式为JSON对象，包含 recommendedOutfit 和 imagePromptDetails 字段:
 1.  **recommendedOutfit**: 对这套推荐服装的详细文字描述，包括为什么这样搭配，以及它适合的场合。请用自然流畅的中文表述。
