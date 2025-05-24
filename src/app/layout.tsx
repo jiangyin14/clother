@@ -16,11 +16,12 @@ import {
 } from '@/components/ui/sidebar';
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
-import { Home, Compass, PanelLeft, UserCircle } from 'lucide-react';
+import { Home, Compass, PanelLeft, UserCircle, Shirt } from 'lucide-react'; // Added Shirt
 import { cn } from '@/lib/utils';
 import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
+// Removed SheetTitle import as it's not directly used here anymore for the main header
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -50,6 +51,7 @@ export default async function RootLayout({
         <SidebarProvider defaultOpen>
           <Sidebar collapsible="icon">
             <SidebarHeader className="p-4">
+              {/* AppLogo is rendered directly. Mobile sheet title is handled by Sidebar component or needs specific prop. */}
               <AppLogo />
             </SidebarHeader>
             <SidebarContent>
@@ -62,6 +64,17 @@ export default async function RootLayout({
                     <span className="flex items-center gap-2">
                       <Home />
                       <span>推荐</span>
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    href="/closet" 
+                    tooltip={{children: "我的衣橱", side: "right", align: "center" }}
+                  >
+                     <span className="flex items-center gap-2">
+                      <Shirt /> {/* Icon for Closet */}
+                      <span>衣橱</span>
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -97,10 +110,11 @@ export default async function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
+              {/* SidebarTrigger for mobile, no asChild here after component refactor */}
               <SidebarTrigger>
                 <span className="flex items-center justify-center">
-                  <PanelLeft className="h-5 w-5" />
-                  <span className="sr-only">切换侧边栏</span>
+                   <PanelLeft className="h-5 w-5" />
+                   <span className="sr-only">切换侧边栏</span>
                 </span>
               </SidebarTrigger>
               <AppLogo />

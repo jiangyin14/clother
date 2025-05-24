@@ -5,10 +5,10 @@ import { recommendClothing } from '@/ai/flows/recommend-clothing-based-on-mood-a
 import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
 import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
-
+import { getClosetItems } from '@/actions/closetActions'; // Import getClosetItems
 
 import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-clothing-attributes';
-import type { RecommendClothingOutput as RecommendClothingFlowOutput } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather'; // Renamed for clarity
+import type { RecommendClothingOutput as RecommendClothingFlowOutput } from '@/ai/flows/recommend-clothing-based-on-mood-and-weather';
 import type { RecommendNewOutfitOutput } from '@/ai/flows/recommend-new-outfit-flow';
 import type { GenerateOutfitImageOutput } from '@/ai/flows/generate-outfit-image-flow';
 import type { GenerateClothingNameOutput } from '@/ai/flows/generate-clothing-name-flow';
@@ -43,28 +43,47 @@ export async function handleGenerateClothingNameAction(
 
 export async function handleGetRecommendationAction(
   moodKeywords: string,
-  weatherInformation: string,
-  clothingKeywords: string[]
-): Promise<RecommendClothingOutput> { // Updated return type to use lib/definitions version
-  if (!moodKeywords || !weatherInformation || clothingKeywords.length === 0) {
-    throw new Error('心情、天气和至少一件衣物是获取推荐所必需的。');
+  weatherInformation: string
+  // clothingKeywords: string[] // Parameter removed
+): Promise<RecommendClothingOutput & { error?: string }> { // Added error to return type for specific messages
+  if (!moodKeywords || !weatherInformation ) { // Removed clothingKeywords length check from here
+    throw new Error('心情和天气信息是获取推荐所必需的。');
   }
+
   try {
-    // The recommendClothing flow now returns an object with recommendedOutfit and imagePromptDetails
+    const closetItems = await getClosetItems(); // Fetch closet items internally
+    if (closetItems.length === 0) {
+      // Handle case where closet is empty (for logged-in user) or user not logged in
+      return { 
+        recommendedOutfit: "您的衣橱是空的，或您尚未登录。请先在“衣橱”页面添加一些衣物，或登录后重试。", 
+        imagePromptDetails: undefined,
+        error: "衣橱为空或未登录，无法生成推荐。" // Specific error message
+      };
+    }
+
+    const allAttributes = Array.from(new Set(closetItems.flatMap(item => item.attributes)));
+    if (allAttributes.length === 0) {
+       return { 
+        recommendedOutfit: "您的衣橱中的衣物似乎没有可识别的属性，无法生成推荐。请尝试上传属性更清晰的衣物图片。", 
+        imagePromptDetails: undefined,
+        error: "衣橱衣物无有效属性。"
+      };
+    }
+
+
     const result: RecommendClothingFlowOutput = await recommendClothing({
       moodKeywords,
       weatherInformation,
-      clothingKeywords,
+      clothingKeywords: allAttributes, // Pass fetched attributes
     });
-    // Ensure the returned object matches the lib/definitions type
+    
     return {
       recommendedOutfit: result.recommendedOutfit,
       imagePromptDetails: result.imagePromptDetails,
     };
-  } catch (error)
-   {
+  } catch (error) {
     console.error('Error getting recommendation:', error);
-    throw new Error('获取推荐失败，请重试。');
+    throw new Error('AI获取推荐失败，请稍后重试。');
   }
 }
 
