@@ -212,10 +212,6 @@ export default function RecommendationPage() {
           )}
         </div>
       </div>
-      
-      <footer className="mt-16 pt-8 border-t text-center text-muted-foreground text-xs">
-        <p>&copy; {new Date().getFullYear()} Clother (衣者). 由 AI 驱动。</p>
-      </footer>
     </div>
   );
 }

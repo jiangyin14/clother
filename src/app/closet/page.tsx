@@ -159,9 +159,6 @@ export default function ClosetPage() {
           />
         </div>
       </div>
-      <footer className="mt-16 pt-8 border-t text-center text-muted-foreground text-xs">
-        <p>&copy; {new Date().getFullYear()} Clother (衣者). 您的智能时尚伙伴。</p>
-      </footer>
     </div>
   );
 }
