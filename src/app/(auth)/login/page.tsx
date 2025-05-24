@@ -34,6 +34,10 @@ export default function LoginPage() {
     if (state) { // Check if state is not undefined (meaning a submission attempt happened)
       setCaptchaToken(null); // Clear previous token
       setCaptchaResetTrigger(prev => prev + 1); // Trigger CAPTCHA reset
+      if (state.success) {
+        // Reload the page on successful login
+        window.location.reload();
+      }
     }
   }, [state]);
 

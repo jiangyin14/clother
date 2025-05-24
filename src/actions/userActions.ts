@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -135,15 +134,12 @@ export async function login(
     };
     await session.save();
 
-    if (!session.user.oobe_completed) {
-      redirect('/profile/setup');
-    }
+    return { message: '登录成功！正在刷新页面...', success: true, oobe_completed: !!userRow.oobe_completed };
 
   } catch (error) {
     console.error('Login error:', error);
     return { message: '登录过程中发生错误，请稍后重试。' };
   }
-  redirect('/');
 }
 
 export async function logout() {
