@@ -14,7 +14,6 @@ import {z}from 'genkit';
 import {
   SILICONFLOW_API_KEY,
   SILICONFLOW_API_BASE_URL,
-  // SILICONFLOW_VL_MODEL // Not used directly here, image generation uses specific model
 } from '@/ai/genkit';
 
 const GenerateOutfitImageInputSchema = z.object({
@@ -23,7 +22,7 @@ const GenerateOutfitImageInputSchema = z.object({
   userAge: z.number().int().positive().optional().describe('模特大致年龄。'),
   userWeightDescription: z.string().optional().describe('模特大致体重或体型描述，例如：约60公斤，中等身材，健硕。'),
   userSkinTone: z.string().optional().describe('模特肤色，例如：白皙，自然，健康小麦色，深色。'),
-  userHeightDescription: z.string().optional().describe('模特大致身高描述，例如：约175厘米，高挑。'), // 新增
+  userHeightDescription: z.string().optional().describe('模特大致身高描述，例如：约175厘米，高挑。'),
 });
 export type GenerateOutfitImageInput = z.infer<typeof GenerateOutfitImageInputSchema>;
 
@@ -34,6 +33,15 @@ export type GenerateOutfitImageOutput = z.infer<typeof GenerateOutfitImageOutput
 
 export async function generateOutfitImage(input: GenerateOutfitImageInput): Promise<GenerateOutfitImageOutput> {
   const validatedInput = GenerateOutfitImageInputSchema.parse(input);
+
+  if (!SILICONFLOW_API_KEY || SILICONFLOW_API_KEY === 'YOUR_SILICONFLOW_API_KEY') {
+    console.error('SiliconFlow API Key is not configured or is a placeholder.');
+    throw new Error('图片生成服务API Key配置不正确。');
+  }
+  if (!SILICONFLOW_API_BASE_URL) {
+    console.error('SiliconFlow API Base URL is not configured.');
+    throw new Error('图片生成服务API基础URL配置不正确。');
+  }
 
   let personaDescription = "一位模特";
   if (validatedInput.userGender) {
@@ -48,7 +56,7 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
   if (validatedInput.userWeightDescription) {
     personaDescription += `，体型${validatedInput.userWeightDescription}`;
   }
-  if (validatedInput.userHeightDescription) { // 新增
+  if (validatedInput.userHeightDescription) {
     personaDescription += `，${validatedInput.userHeightDescription}`;
   }
   
@@ -78,23 +86,24 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
       if (errorBody.includes("SAFETY_FILTER_TRIGGERED") || errorBody.includes("prompt violates safety policy")) {
          throw new Error(`图片生成失败，提示词可能触发了内容安全策略。请尝试调整描述。原始错误: ${errorBody}`);
       }
-      throw new Error(`Image API request failed with status ${apiResponse.status}: ${errorBody}`);
+      throw new Error(`图像API请求失败，状态码 ${apiResponse.status}: ${errorBody}`);
     }
 
     const responseData = await apiResponse.json();
 
-    if (!responseData.images || responseData.images.length === 0 || !responseData.images[0].url) {
+    const imageUrl = responseData.images?.[0]?.url;
+    if (!imageUrl) {
       console.error('Invalid response structure from SiliconFlow Image API (missing URL):', responseData);
-      throw new Error('Invalid image response structure from API (missing URL)');
+      throw new Error('从图像 API 返回的图像 URL 无效或缺失。');
     }
 
-    const imageUrl = responseData.images[0].url;
-
-    const imageContentResponse = await fetch(imageUrl);
+    console.log(`Fetching image content from SiliconFlow URL: ${imageUrl}`);
+    // Use { cache: 'no-store' } to prevent caching issues, especially in server environments.
+    const imageContentResponse = await fetch(imageUrl, { cache: 'no-store' });
     if (!imageContentResponse.ok) {
       const errorBody = await imageContentResponse.text();
-      console.error('Failed to fetch image from URL:', imageContentResponse.status, errorBody);
-      throw new Error(`Failed to fetch image from URL ${imageUrl}: ${imageContentResponse.status}`);
+      console.error(`Failed to fetch image from URL: ${imageUrl}. Status: ${imageContentResponse.status}. Body: ${errorBody}`);
+      throw new Error(`从 URL ${imageUrl} 获取图像内容失败，状态码: ${imageContentResponse.status}`);
     }
 
     const imageArrayBuffer = await imageContentResponse.arrayBuffer();
@@ -107,7 +116,14 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
 
   } catch (error) {
     console.error('Error in generateOutfitImage:', error);
-    throw error;
+    if (error instanceof Error) {
+        // Re-throw with a potentially more generic message or a specific one based on type
+         if (error.message.includes('API Key') || error.message.includes('API基础URL')) {
+            throw error; // Keep specific config errors
+         }
+         throw new Error(`图片生成过程中发生错误: ${error.message}`);
+    }
+    throw new Error('图片生成过程中发生未知错误。');
   }
 }
 

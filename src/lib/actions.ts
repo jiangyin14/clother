@@ -21,8 +21,11 @@ export async function handleIdentifyAttributesAction(
     const result = await identifyClothingAttributes({ photoDataUri });
     return result;
   } catch (error) {
-    console.error('Error identifying clothing attributes:', error);
-    throw new Error('识别衣物属性失败，请重试。');
+    console.error('Error in handleIdentifyAttributesAction:', error);
+    if (error instanceof Error) {
+      throw new Error(`识别衣物属性失败: ${error.message}`);
+    }
+    throw new Error('识别衣物属性时发生未知错误。');
   }
 }
 
@@ -36,8 +39,11 @@ export async function handleGenerateClothingNameAction(
     const result = await generateClothingName({ attributes });
     return result;
   } catch (error) {
-    console.error('Error generating clothing name:', error);
-    throw new Error('生成衣物名称失败，请重试。');
+    console.error('Error in handleGenerateClothingNameAction:', error);
+    if (error instanceof Error) {
+      throw new Error(`生成衣物名称失败: ${error.message}`);
+    }
+    throw new Error('生成衣物名称时发生未知错误。');
   }
 }
 
@@ -82,8 +88,11 @@ export async function handleGetRecommendationAction(
       imagePromptDetails: result.imagePromptDetails, 
     };
   } catch (error) {
-    console.error('Error getting recommendation:', error);
-    throw new Error('AI获取推荐失败，请稍后重试。');
+    console.error('Error in handleGetRecommendationAction:', error);
+    if (error instanceof Error) {
+      throw new Error(`AI获取推荐失败: ${error.message}`);
+    }
+    throw new Error('AI获取推荐时发生未知错误。');
   }
 }
 
@@ -106,8 +115,11 @@ export async function handleExploreOutfitAction(
     });
     return result; 
   } catch (error) {
-    console.error('Error exploring new outfit:', error);
-    throw new Error('探索新搭配失败，请重试。');
+    console.error('Error in handleExploreOutfitAction:', error);
+     if (error instanceof Error) {
+      throw new Error(`探索新搭配失败: ${error.message}`);
+    }
+    throw new Error('探索新搭配时发生未知错误。');
   }
 }
 
@@ -115,6 +127,7 @@ export async function handleGenerateOutfitImageAction(
   outfitClothingDescription: string 
 ): Promise<GenerateOutfitImageOutput> {
   if (!outfitClothingDescription) {
+    console.error("Error in handleGenerateOutfitImageAction: outfitClothingDescription is missing.");
     throw new Error('缺少服装描述，无法生成图片。');
   }
   try {
@@ -123,9 +136,9 @@ export async function handleGenerateOutfitImageAction(
     if (user?.weight) {
       userWeightDescription = `约 ${user.weight} 公斤`;
     }
-    let userHeightDescription: string | undefined = undefined; // 新增
-    if (user?.height) { // 新增
-      userHeightDescription = `身高约 ${user.height} 厘米`; // 新增
+    let userHeightDescription: string | undefined = undefined;
+    if (user?.height) {
+      userHeightDescription = `身高约 ${user.height} 厘米`;
     }
 
     const result = await generateOutfitImage({ 
@@ -134,15 +147,19 @@ export async function handleGenerateOutfitImageAction(
       userAge: user?.age || undefined,
       userWeightDescription: userWeightDescription,
       userSkinTone: user?.skinTone || undefined,
-      userHeightDescription: userHeightDescription, // 新增
+      userHeightDescription: userHeightDescription,
     });
     return result;
   } catch (error) {
-    console.error('Error generating outfit image:', error);
-    if (error instanceof Error && (error.message.includes('SAFETY') || error.message.toLowerCase().includes('safety'))) {
-       throw new Error('图片生成失败，可能由于内容安全策略。请尝试不同的描述或搭配。');
+    console.error('Error in handleGenerateOutfitImageAction calling generateOutfitImage:', error);
+    if (error instanceof Error) {
+       // Check for specific configuration error messages from the flow
+      if (error.message.includes('API Key配置不正确') || error.message.includes('API基础URL配置不正确')) {
+        throw error; // Re-throw specific config errors as is
+      }
+      throw new Error(`生成服装图片失败: ${error.message}`);
     }
-    throw new Error('生成服装图片失败，请重试。');
+    throw new Error('生成服装图片时发生未知错误。');
   }
 }
 
