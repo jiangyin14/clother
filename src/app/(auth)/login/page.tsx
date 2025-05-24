@@ -2,7 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormState } from 'react-dom';
 import { login } from '@/actions/userActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +24,7 @@ function LoginButton() {
 }
 
 export default function LoginPage() {
-  const [state, dispatch] = useFormState(login, undefined);
+  const [state, dispatch] = useActionState(login, undefined);
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
 

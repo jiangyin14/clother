@@ -1,4 +1,3 @@
-
 'use server';
 
 import pool from '@/lib/db';
@@ -11,17 +10,31 @@ function serializeAttributes(attributes: string[]): string {
   return JSON.stringify(attributes);
 }
 
-function deserializeAttributes(attributesJson: string | null | undefined): string[] {
+function deserializeAttributes(attributesJson: string | null | any[]): string[] {
+  // If it's null or undefined
   if (!attributesJson) return [];
+
+  // If it's already an array
+  if (Array.isArray(attributesJson)) {
+    return attributesJson;
+  }
+
+  // If it's a string
   try {
     const parsed = JSON.parse(attributesJson);
     return Array.isArray(parsed) ? parsed : [];
   } catch (e) {
-    console.error("Failed to parse attributes JSON from DB:", attributesJson, e);
-    return [];
+    // Handle single quotes format
+    try {
+      const fixedJson = attributesJson.replace(/'/g, '"');
+      const parsed = JSON.parse(fixedJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error("Failed to parse attributes JSON from DB:", attributesJson, error);
+      return [];
+    }
   }
 }
-
 
 export async function getClosetItems(): Promise<ClothingItem[]> {
   const user = await getUserFromSession();
@@ -58,12 +71,22 @@ export async function addClothingItem(itemData: Omit<ClothingItem, 'user_id' | '
     return { error: '用户未登录，无法添加衣物。' };
   }
 
+  const now = new Date();
+  // Format date to 'YYYY-MM-DD HH:MM:SS' for MySQL
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const formattedCreatedAt = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
   const newItem: ClothingItem = {
     ...itemData,
     id: itemData.id || `db-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // Ensure ID for DB
     user_id: user.id,
     isDefault: false, // User-added items are not default
-    created_at: new Date().toISOString(),
+    created_at: formattedCreatedAt, // Use formatted date
   };
 
   try {

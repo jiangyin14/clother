@@ -56,13 +56,13 @@ export default function AuthNav({ user }: AuthNavProps) {
       ) : (
         <>
           {/* Button component is used directly here, no asChild involvement */}
-          <Button asChild variant="ghost" size="sm">
+          <Button aschild variant="ghost" size="sm">
             <Link href="/login" className="flex items-center gap-1.5">
               <LogIn size={16} />
               登录
             </Link>
           </Button>
-          <Button asChild variant="default" size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button aschild variant="default" size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
             <Link href="/register" className="flex items-center gap-1.5">
               <UserPlus size={16} />
               注册

@@ -113,6 +113,7 @@ export async function logout() {
 }
 
 export async function getUserFromSession(): Promise<Pick<User, 'id' | 'username'> | null> {
-  const session = await getIronSession(cookies(), sessionOptions);
+  const cookieStore = await cookies();
+  const session = await getIronSession(cookieStore, sessionOptions);
   return session.user || null;
 }
