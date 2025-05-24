@@ -1,16 +1,17 @@
+
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Script from 'next/script';
-import { cn } from '@/lib/utils'; // Added this import
+import { cn } from '@/lib/utils';
 
 interface CaptchaWidgetProps {
   onTokenChange: (token: string | null) => void;
   siteKey?: string;
   theme?: 'light' | 'dark';
   size?: 'normal' | 'compact' | 'invisible';
-  className?: string; // For the outer container, allowing responsive scaling
-  resetTrigger?: number; // New prop
+  className?: string;
+  resetTrigger?: number;
 }
 
 declare global {
@@ -25,7 +26,7 @@ declare global {
       execute: (widgetID?: string) => void;
       remove: (widgetID: string) => void;
     };
-    onHCaptchaApiLoad?: () => void; // Callback for script load
+    onHCaptchaApiLoad?: () => void;
   }
 
   interface HCaptchaOptions {
@@ -34,59 +35,68 @@ declare global {
     size?: 'normal' | 'compact' | 'invisible';
     callback?: (token: string) => void;
     'expired-callback'?: () => void;
-    'chalexpired-callback'?: () => void; // Note: specific for challenge expiration
+    'chalexpired-callback'?: () => void;
     'error-callback'?: (error: string) => void;
-    // Add other hCaptcha options if needed: tabindex, shortlang, etc.
   }
 }
 
 const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
   onTokenChange,
   siteKey,
-  theme = 'light', // hCaptcha default is light
+  theme = 'light',
   size = 'normal',
   className,
-  resetTrigger, // Destructure new prop
+  resetTrigger,
 }) => {
   const captchaContainerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isApiReady, setIsApiReady] = useState(false);
+  const isMountedRef = useRef(false); // To track if component is mounted
 
   const actualSiteKey = siteKey || process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   useEffect(() => {
-    // Define the global callback function for hCaptcha script
+    isMountedRef.current = true;
     window.onHCaptchaApiLoad = () => {
-      setIsApiReady(true);
+      if (isMountedRef.current) {
+        setIsApiReady(true);
+      }
     };
-    // Load the script
-    setIsScriptLoaded(true); // Trigger Script component loading
-
     return () => {
-      // Clean up the global callback
+      isMountedRef.current = false;
       delete window.onHCaptchaApiLoad;
+      // Ensure to remove widget if component unmounts while API is loading
+      if (widgetIdRef.current && window.hcaptcha?.remove) {
+        try {
+          window.hcaptcha.remove(widgetIdRef.current);
+        } catch (e) {
+          // console.warn('hCaptcha: Failed to remove widget on unmount (during API load phase):', e);
+        }
+        widgetIdRef.current = null;
+      }
     };
   }, []);
 
-  const renderCaptcha = useCallback(() => {
-    if (!isApiReady || !window.hcaptcha || !captchaContainerRef.current || !actualSiteKey) {
+  const renderNewCaptchaInstance = useCallback(() => {
+    if (!isApiReady || !captchaContainerRef.current || !window.hcaptcha || !actualSiteKey) {
       return;
     }
 
-    if (widgetIdRef.current && window.hcaptcha.remove) {
+    // Always remove previous instance if it exists, managed by this component
+    if (widgetIdRef.current) {
       try {
         window.hcaptcha.remove(widgetIdRef.current);
       } catch (e) {
-        // console.warn('hCaptcha: Failed to remove previous widget:', e);
+        // console.warn(`CaptchaWidget: Failed to remove old widget ${widgetIdRef.current} before rendering new one.`, e);
       }
       widgetIdRef.current = null;
     }
-    
-    // Ensure container is empty (hCaptcha might not always clean up perfectly on its own)
-    if(captchaContainerRef.current.innerHTML !== '') {
-        // captchaContainerRef.current.innerHTML = ''; // Be cautious
+
+    // Ensure the container is empty for hCaptcha to render into
+    if (captchaContainerRef.current) {
+        captchaContainerRef.current.innerHTML = '';
     }
+
 
     try {
       const newWidgetId = window.hcaptcha.render(captchaContainerRef.current, {
@@ -94,49 +104,82 @@ const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
         theme: theme,
         size: size,
         callback: (token: string) => {
-          onTokenChange(token);
+          if (isMountedRef.current) onTokenChange(token);
         },
         'expired-callback': () => {
-          // console.warn('hCaptcha: Token expired.');
-          onTokenChange(null);
-          if (widgetIdRef.current && window.hcaptcha?.reset) {
-            window.hcaptcha.reset(widgetIdRef.current);
+          if (isMountedRef.current) {
+            onTokenChange(null);
+            // Optionally try to reset the widget here if auto-reset is desired on expiry
+            // if (widgetIdRef.current && window.hcaptcha?.reset) window.hcaptcha.reset(widgetIdRef.current);
           }
         },
-        'chalexpired-callback': () => { // hCaptcha specific
-            // console.warn('hCaptcha: Challenge expired.');
+        'chalexpired-callback': () => {
+           if (isMountedRef.current) {
             onTokenChange(null);
-            if (widgetIdRef.current && window.hcaptcha?.reset) {
-              window.hcaptcha.reset(widgetIdRef.current);
-            }
+            // if (widgetIdRef.current && window.hcaptcha?.reset) window.hcaptcha.reset(widgetIdRef.current);
+          }
         },
-        'error-callback': (error: string) => {
-          // console.error('hCaptcha: Error callback triggered.', error);
-          onTokenChange(null);
+        'error-callback': (err: string) => {
+          // console.error('hCaptcha error:', err);
+          if (isMountedRef.current) onTokenChange(null);
         },
       });
       widgetIdRef.current = newWidgetId;
     } catch (e) {
-      // console.error('hCaptcha: Error calling window.hcaptcha.render:', e);
-      onTokenChange(null);
+      // console.error('Error rendering hCaptcha:', e);
+      if (isMountedRef.current) onTokenChange(null);
     }
   }, [isApiReady, actualSiteKey, theme, size, onTokenChange]);
 
+  // Effect for initial render and prop changes that require full re-render
   useEffect(() => {
     if (isApiReady) {
-      renderCaptcha();
+      renderNewCaptchaInstance();
     }
+  }, [isApiReady, actualSiteKey, theme, size, renderNewCaptchaInstance]);
+
+
+  // Effect to handle external reset trigger
+  useEffect(() => {
+    if (resetTrigger === undefined || resetTrigger === 0) { // Ignore initial trigger value
+      return;
+    }
+
+    if (isApiReady && window.hcaptcha) {
+      if (widgetIdRef.current) {
+        try {
+          // console.log(`CaptchaWidget: Resetting widget ${widgetIdRef.current} due to resetTrigger.`);
+          window.hcaptcha.reset(widgetIdRef.current);
+          if (isMountedRef.current) {
+            onTokenChange(null); // After reset, the old token is invalid.
+          }
+        } catch (e) {
+          // console.warn(`CaptchaWidget: hcaptcha.reset failed for widget ${widgetIdRef.current}. Falling back to full re-render.`, e);
+          renderNewCaptchaInstance(); // Fallback if reset fails
+        }
+      } else {
+        // If no widget exists, but a reset is triggered, render a new one.
+        // console.log("CaptchaWidget: resetTrigger fired but no widgetId. Rendering new instance.");
+        renderNewCaptchaInstance();
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetTrigger, isApiReady]); // `renderNewCaptchaInstance` is not needed here as this effect handles reset/re-render explicitly.
+
+  // Cleanup on component unmount
+  useEffect(() => {
     return () => {
       if (widgetIdRef.current && window.hcaptcha?.remove) {
         try {
           window.hcaptcha.remove(widgetIdRef.current);
         } catch (e) {
-          // console.warn('hCaptcha: Failed to remove widget on cleanup:', e);
+          // console.warn(`CaptchaWidget: Failed to remove widget ${widgetIdRef.current} on unmount:`, e);
         }
         widgetIdRef.current = null;
       }
     };
-  }, [isApiReady, renderCaptcha, resetTrigger]); // Add resetTrigger to dependency array
+  }, []);
+
 
   if (!actualSiteKey) {
     return (
@@ -148,26 +191,24 @@ const CaptchaWidget: React.FC<CaptchaWidgetProps> = ({
 
   return (
     <>
-      {isScriptLoaded && ( // Only load script if component is mounted
-        <Script
-          id="hcaptcha-api-script"
-          src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=onHCaptchaApiLoad"
-          strategy="afterInteractive" // or "lazyOnload"
-          async
-          defer
-          onError={() => {
-            // console.error('hCaptcha: Failed to load script.');
-            onTokenChange(null); 
-            setIsApiReady(false); // Mark API as not ready
-          }}
-        />
-      )}
-      {/* Container for scaling and centering */}
+      <Script
+        id="hcaptcha-api-script"
+        src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=onHCaptchaApiLoad"
+        strategy="afterInteractive"
+        async
+        defer
+        onError={() => {
+          // console.error('hCaptcha: Failed to load script.');
+          if (isMountedRef.current) {
+            onTokenChange(null);
+            setIsApiReady(false);
+          }
+        }}
+      />
       <div className={cn("hcaptcha-widget-container", className)}>
-        {/* Actual hCaptcha render target */}
         <div ref={captchaContainerRef} id={`hcaptcha-render-${React.useId()}`} />
       </div>
-       {!isApiReady && isScriptLoaded && <p className="text-xs text-muted-foreground text-center py-2">正在加载验证码...</p>}
+      {!isApiReady && <p className="text-xs text-muted-foreground text-center py-2">正在加载验证码...</p>}
     </>
   );
 };
