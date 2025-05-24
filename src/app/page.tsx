@@ -1,12 +1,13 @@
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { ClothingItem } from '@/lib/definitions';
 import { DEFAULT_CLOTHING_ITEMS, WEATHER_OPTIONS, MOOD_OPTIONS } from '@/lib/constants';
 import { handleGetRecommendationAction } from '@/lib/actions';
+import { addClothingItem, getClosetItems, removeClothingItem } from '@/actions/closetActions';
 import { useToast } from '@/hooks/use-toast';
 
-// import AppLogo from '@/components/AppLogo'; // AppLogo is now in layout
 import ClothingUploadForm from '@/components/ClothingUploadForm';
 import ClosetView from '@/components/ClosetView';
 import MoodWeatherInput from '@/components/MoodWeatherInput';
@@ -14,7 +15,9 @@ import RecommendationDisplay from '@/components/RecommendationDisplay';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { getUserFromSession } from '@/actions/userActions'; // To check login status on client (or pass as prop)
+
 
 export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
@@ -22,38 +25,107 @@ export default function RecommendationPage() {
   const [selectedWeather, setSelectedWeather] = useState<string>(WEATHER_OPTIONS[0]?.value || '');
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
-  const [clientLoaded, setClientLoaded] = useState(false);
+  const [isLoadingCloset, setIsLoadingCloset] = useState(true); // For loading state
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // To track login status
+
 
   const { toast } = useToast();
 
+  const fetchClosetItems = useCallback(async () => {
+    setIsLoadingCloset(true);
+    try {
+      const user = await getUserFromSession(); // Check if user is logged in
+      if (user) {
+        setIsLoggedIn(true);
+        const items = await getClosetItems();
+        setMyClosetItems(items);
+      } else {
+        setIsLoggedIn(false);
+        // For non-logged-in users, maybe load defaults or keep empty
+        // setMyClosetItems(DEFAULT_CLOTHING_ITEMS.slice(0,1)); // Example: load one default if not logged in
+        setMyClosetItems([]); 
+      }
+    } catch (error) {
+      toast({
+        title: '加载衣橱失败',
+        description: error instanceof Error ? error.message : '无法连接到服务器。',
+        variant: 'destructive',
+      });
+      setIsLoggedIn(false);
+      setMyClosetItems([]);
+    } finally {
+      setIsLoadingCloset(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
-    setClientLoaded(true);
-    // Optionally load some default items into "My Closet" on initial load
-    // setMyClosetItems(DEFAULT_CLOTHING_ITEMS.slice(0, 1));
-  }, []);
+    fetchClosetItems();
+  }, [fetchClosetItems]);
 
 
-  const handleClothingAnalyzed = (newItemData: Omit<ClothingItem, 'id' | 'isDefault'>) => {
-    const newItem: ClothingItem = {
+  const handleClothingAnalyzed = async (newItemData: Omit<ClothingItem, 'id' | 'isDefault' | 'user_id' | 'created_at'>) => {
+    const tempId = `uploaded-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const newItemForState: ClothingItem = {
       ...newItemData,
-      id: `uploaded-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: tempId,
       isDefault: false,
     };
-    setMyClosetItems((prevItems) => [newItem, ...prevItems]);
+    
+    if (isLoggedIn) {
+        const result = await addClothingItem(newItemForState); // server action will add user_id
+        if ('error' in result) {
+            toast({ title: "添加衣物失败", description: result.error, variant: "destructive" });
+        } else {
+            // Add to local state optimistically or re-fetch. Here, we add then potentially re-fetch.
+            setMyClosetItems((prevItems) => [result, ...prevItems]);
+            toast({ title: "已添加衣物", description: `${result.name} 已保存到您的在线衣橱。` });
+        }
+    } else {
+        // For non-logged-in users, just add to local state
+        setMyClosetItems((prevItems) => [newItemForState, ...prevItems]);
+        toast({ title: "已添加衣物 (未登录)", description: `${newItemForState.name} 已添加到本地衣橱，登录后可保存。` });
+    }
   };
-
+  
   const handleAddDefaultClothing = (itemToAdd: ClothingItem) => {
+     // This function might need rethinking if default items are global vs per-user copies
+     // For now, if not logged in, it adds to local state.
+     // If logged in, it should ideally check DB, then add to DB and local state.
     if (!myClosetItems.find(item => item.id === itemToAdd.id)) {
-      setMyClosetItems((prevItems) => [...prevItems, itemToAdd]);
-      toast({ title: "已添加物品", description: `${itemToAdd.name} 已添加到你的衣橱。` });
+      if (isLoggedIn) {
+        // If we want to copy default items to user's DB closet:
+        const itemToSave = { ...itemToAdd, id: `default-user-${user?.id}-${itemToAdd.id}`, isDefault: false }; // Make a user-specific copy
+        addClothingItem(itemToSave).then(res => {
+          if ('error' in res) {
+            toast({ title: "添加失败", description: res.error, variant: "destructive" });
+          } else {
+            setMyClosetItems((prevItems) => [res, ...prevItems]);
+            toast({ title: "已添加物品", description: `${res.name} 已添加到你的在线衣橱。` });
+          }
+        });
+      } else {
+        setMyClosetItems((prevItems) => [...prevItems, itemToAdd]);
+        toast({ title: "已添加物品", description: `${itemToAdd.name} 已添加到你的本地衣橱。` });
+      }
     } else {
       toast({ title: "已存在", description: `${itemToAdd.name} 已在你的衣橱中。`, variant: "default" });
     }
   };
 
-  const handleRemoveMyClothing = (idToRemove: string) => {
-    setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
-    toast({ title: "已移除物品", description: "该物品已从你的衣橱中移除。" });
+  const handleRemoveMyClothing = async (idToRemove: string) => {
+    if (isLoggedIn) {
+      const result = await removeClothingItem(idToRemove);
+      if (result.success) {
+        setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
+        toast({ title: "已移除物品", description: "该物品已从您的在线衣橱中移除。" });
+      } else {
+        toast({ title: "移除失败", description: result.error || "无法移除物品。", variant: "destructive" });
+      }
+    } else {
+      // For non-logged-in users, just remove from local state
+      setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
+      toast({ title: "已移除物品", description: "该物品已从本地衣橱中移除。" });
+    }
   };
 
   const handleGetRecommendation = async () => {
@@ -92,10 +164,11 @@ export default function RecommendationPage() {
     }
   };
   
-  if (!clientLoaded) {
+  if (isLoadingCloset && !myClosetItems.length) { // Show loader only if closet is empty and loading
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-muted-foreground">正在加载您的衣橱...</p>
       </div>
     );
   }
@@ -114,16 +187,19 @@ export default function RecommendationPage() {
           <ClothingUploadForm onClothingAnalyzed={handleClothingAnalyzed} />
           <ClosetView
             myClosetItems={myClosetItems}
-            defaultClothingItems={DEFAULT_CLOTHING_ITEMS}
+            defaultClothingItems={isLoggedIn ? [] : DEFAULT_CLOTHING_ITEMS} // Show defaults only if not logged in and no DB items loaded
             onAddDefaultClothing={handleAddDefaultClothing}
             onRemoveMyClothing={handleRemoveMyClothing}
+            isLoading={isLoadingCloset}
+            isLoggedIn={isLoggedIn}
           />
         </div>
 
         <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 self-start">
-          <Card>
+         <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>搭配助手</CardTitle>
+              <CardTitle className="text-xl">搭配场景</CardTitle>
+              <CardDescription>选择你的心情和天气，AI来帮你搭配。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <MoodWeatherInput
