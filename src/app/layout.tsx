@@ -18,11 +18,11 @@ import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
 import { Home, Compass, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
+// Removed: import { buttonVariants } from '@/components/ui/button'; // No longer needed here for SidebarTrigger
 import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
-
+// Removed: import { SheetTitle } from '@/components/ui/sheet'; // SheetTitle is handled internally if needed by Radix, or by specific sheet implementations
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -52,6 +52,8 @@ export default async function RootLayout({
         <SidebarProvider defaultOpen>
           <Sidebar collapsible="icon">
             <SidebarHeader className="p-4">
+              {/* AppLogo is rendered directly. If mobile sheet needs a title, 
+                  Sidebar component itself or SheetContent's usage should handle it. */}
               <AppLogo />
             </SidebarHeader>
             <SidebarContent>
@@ -62,7 +64,7 @@ export default async function RootLayout({
                     tooltip={{children: "推荐", side: "right", align: "center" }}
                   >
                     <span className="flex items-center gap-2">
-                      <span><Home /></span>
+                      <Home />
                       <span>推荐</span>
                     </span>
                   </SidebarMenuButton>
@@ -73,7 +75,7 @@ export default async function RootLayout({
                     tooltip={{children: "探索", side: "right", align: "center" }}
                   >
                      <span className="flex items-center gap-2">
-                      <span><Compass /></span>
+                      <Compass />
                       <span>探索</span>
                     </span>
                   </SidebarMenuButton>
@@ -86,16 +88,15 @@ export default async function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
-              <SidebarTrigger>
+              {/* SidebarTrigger no longer uses asChild from consumer */}
+              <SidebarTrigger variant="ghost" size="icon">
                 <span className="flex items-center justify-center">
-                  <span>
-                    <PanelLeft className="h-5 w-5" />
-                    <span className="sr-only">切换侧边栏</span>
-                  </span>
+                  <PanelLeft className="h-5 w-5" />
+                  <span className="sr-only">切换侧边栏</span>
                 </span>
               </SidebarTrigger>
               <AppLogo />
-              <AuthNav user={user} /> {/* AuthNav for mobile header */}
+              <AuthNav user={user} />
             </header>
             <main className="flex-1 p-4 sm:p-6">
               {children}

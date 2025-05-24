@@ -2,17 +2,17 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link" // Import Link for navigation
+import Link from "next/link"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
-import { Button, buttonVariants } from "@/components/ui/button" // Keep Button for SidebarTrigger
+import { Button, buttonVariants } from "@/components/ui/button" 
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet" // Keep SheetTitle for potential future use or if Sidebar itself provides a title context
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet" 
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -192,7 +192,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden" // Removed [&>button]:hidden assuming SheetClose is used explicitly or not at all
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -200,11 +200,6 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            {/* The SheetContent itself needs a DialogTitle for accessibility.
-                This should ideally be handled by the children passed to it,
-                or by having a dedicated title prop for the Sidebar that it
-                can render here as SheetTitle.
-            */}
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
         </Sheet>
@@ -258,25 +253,22 @@ Sidebar.displayName = "Sidebar"
 
 const SidebarTrigger = React.forwardRef<
   HTMLButtonElement,
-  // Omit asChild, it will always be a button
-  Omit<React.ComponentPropsWithoutRef<typeof Button>, "asChild"> 
->(({ className, onClick, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof Button> // Uses ButtonProps
+>(({ className, children, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
-
   return (
     <Button
       ref={ref}
-      data-sidebar="trigger"
-      variant="ghost" // Default variant, can be overridden by props
-      size="icon"     // Default size, can be overridden by props
-      className={cn(className)} // Removed default h-7 w-7, rely on size="icon" and user override
+      variant="ghost" // Default variant, can be overridden
+      size="icon"     // Default size, can be overridden
+      className={cn("md:hidden", className)} // Default md:hidden, can be overridden
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
-      {...props} 
+      {...props}
     >
-      {children ? children : (
+      {children || (
         <>
           <PanelLeft />
           <span className="sr-only">Toggle Sidebar</span>
@@ -286,6 +278,7 @@ const SidebarTrigger = React.forwardRef<
   );
 });
 SidebarTrigger.displayName = "SidebarTrigger"
+
 
 const SidebarRail = React.forwardRef<
   HTMLButtonElement,
@@ -354,7 +347,7 @@ SidebarInput.displayName = "SidebarInput"
 
 const SidebarHeader = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> // Changed from React.ComponentProps<"div"> to HTMLAttributes for wider compatibility
+  React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
   return (
     <div
@@ -432,8 +425,8 @@ SidebarGroup.displayName = "SidebarGroup"
 
 const SidebarGroupLabel = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & { asChild?: boolean }
->(({ className, asChild = false, ...props }, ref) => {
+  React.ComponentProps<"div"> & { asChild?: boolean } // asChild removed for consumer
+>(({ className, asChild = false, ...props }, ref) => { // asChild only internal if Slot was used
   const Comp = asChild ? Slot : "div"
 
   return (
@@ -453,8 +446,8 @@ SidebarGroupLabel.displayName = "SidebarGroupLabel"
 
 const SidebarGroupAction = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<"button"> & { asChild?: boolean }
->(({ className, asChild = false, ...props }, ref) => {
+  React.ComponentProps<"button"> & { asChild?: boolean } // asChild removed for consumer
+>(({ className, asChild = false, ...props }, ref) => { // asChild only internal if Slot was used
   const Comp = asChild ? Slot : "button"
 
   return (
@@ -524,7 +517,7 @@ const sidebarMenuButtonVariants = cva(
       size: {
         default: "h-8 text-sm",
         sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0", // Changed to !p-0 for lg icon
+        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
       },
     },
     defaultVariants: {
@@ -536,15 +529,14 @@ const sidebarMenuButtonVariants = cva(
 
 interface SidebarMenuButtonPropsBase extends VariantProps<typeof sidebarMenuButtonVariants> {
   isActive?: boolean;
-  tooltip?: string | Omit<React.ComponentProps<typeof TooltipContent>, 'children'> & { children?: React.ReactNode }; // Allow complex tooltip content
+  tooltip?: string | Omit<React.ComponentProps<typeof TooltipContent>, 'children'> & { children?: React.ReactNode };
   children: React.ReactNode;
   className?: string;
 }
 
-// Discriminated union for props based on whether 'href' is present
 type SidebarMenuButtonConditionalProps =
-  | (Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className'> & { href: string; onClick?: never; }) // Link specific props, href is required
-  | (Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'> & { href?: never; }); // Button specific props, onClick is expected if not a link
+  | (Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className' | 'as'> & { href: string; onClick?: never; })
+  | (Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'> & { href?: never; });
 
 export type SidebarMenuButtonProps = SidebarMenuButtonPropsBase & SidebarMenuButtonConditionalProps;
 
@@ -567,7 +559,7 @@ const SidebarMenuButton = React.forwardRef<
     ref
   ) => {
     const { isMobile, state } = useSidebar();
-    const commonClassNames = cn(sidebarMenuButtonVariants({ variant, size, className }));
+    const combinedClassName = cn(sidebarMenuButtonVariants({ variant, size, className }));
     
     const commonDataAttributes = {
       'data-active': isActive,
@@ -575,28 +567,28 @@ const SidebarMenuButton = React.forwardRef<
       'data-sidebar': "menu-button",
     };
 
-    let element: JSX.Element;
+    let elementToRender: JSX.Element;
 
     if (href) {
-      element = (
+      elementToRender = (
         <Link
           href={href}
           ref={ref as React.Ref<HTMLAnchorElement>}
-          className={commonClassNames}
+          className={combinedClassName}
           {...commonDataAttributes}
-          {...(props as Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className'>)} // Spread link-specific props
+          {...(props as Omit<React.ComponentPropsWithoutRef<typeof Link>, 'href' | 'children' | 'className' | 'as'>)}
         >
           {children}
         </Link>
       );
     } else {
-      element = (
+      elementToRender = (
         <button
           type="button"
           ref={ref as React.Ref<HTMLButtonElement>}
-          className={commonClassNames}
+          className={combinedClassName}
           {...commonDataAttributes}
-          {...(props as Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'>)} // Spread button-specific props
+          {...(props as Omit<React.ComponentPropsWithoutRef<'button'>, 'children' | 'className'>)}
         >
           {children}
         </button>
@@ -604,16 +596,17 @@ const SidebarMenuButton = React.forwardRef<
     }
 
     if (!tooltip) {
-      return element;
+      return elementToRender;
     }
     
     const tooltipContentChildren = typeof tooltip === 'string' ? tooltip : tooltip.children;
     const tooltipContentProps = typeof tooltip === 'object' ? { ...tooltip, children: undefined } : {};
 
-
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{element}</TooltipTrigger>
+        <TooltipTrigger asChild>
+            {elementToRender}
+        </TooltipTrigger>
         <TooltipContent
           side="right"
           align="center"
@@ -632,10 +625,10 @@ SidebarMenuButton.displayName = "SidebarMenuButton";
 const SidebarMenuAction = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<"button"> & {
-    asChild?: boolean
+    asChild?: boolean; // Removed asChild for consumer
     showOnHover?: boolean
   }
->(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
+>(({ className, asChild = false, showOnHover = false, ...props }, ref) => { // asChild only internal if Slot was used
   const Comp = asChild ? Slot : "button"
 
   return (
@@ -741,17 +734,14 @@ const SidebarMenuSubItem = React.forwardRef<
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem"
 
 const SidebarMenuSubButton = React.forwardRef<
-  HTMLAnchorElement, // Assuming it's primarily for navigation
+  HTMLAnchorElement, 
   React.ComponentProps<"a"> & {
-    asChild?: boolean // Keeping asChild for flexibility if needed for sub-buttons, though less common
-    size?: "sm" | "md"
+    size?: "sm" | "md" // Removed asChild
     isActive?: boolean
   }
->(({ asChild = false, size = "md", isActive, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : "a"
-
+>(({ size = "md", isActive, className, ...props }, ref) => {
   return (
-    <Comp
+    <a // Render 'a' tag directly
       ref={ref}
       data-sidebar="menu-sub-button"
       data-size={size}
@@ -796,5 +786,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    

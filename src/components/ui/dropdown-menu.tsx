@@ -5,18 +5,40 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Button, buttonVariants } from "@/components/ui/button" // Import our Button
+
+// const DropdownMenu = DropdownMenuPrimitive.Root // Keep as is
+// const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger // This was the original
+// const DropdownMenuGroup = DropdownMenuPrimitive.Group // Keep as is
+// const DropdownMenuPortal = DropdownMenuPrimitive.Portal // Keep as is
+// const DropdownMenuSub = DropdownMenuPrimitive.Sub // Keep as is
+// const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup // Keep as is
 
 const DropdownMenu = DropdownMenuPrimitive.Root
-
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
-
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
-
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal
-
 const DropdownMenuSub = DropdownMenuPrimitive.Sub
-
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup
+
+
+// Refactored DropdownMenuTrigger to not require asChild from consumer
+const DropdownMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof Button> // Accepts ButtonProps
+>(({ className, children, variant = "ghost", size, ...props }, ref) => ( // Default variant to ghost, similar to original behavior
+  <DropdownMenuPrimitive.Trigger asChild ref={ref}>
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      {...props}
+    >
+      {children}
+    </Button>
+  </DropdownMenuPrimitive.Trigger>
+));
+DropdownMenuTrigger.displayName = "DropdownMenuTrigger"
+
 
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
@@ -77,9 +99,10 @@ DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-    inset?: boolean
+    inset?: boolean;
+    // No asChild here for consumer
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, children, ...props }, ref) => ( // Added children to props
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -88,9 +111,12 @@ const DropdownMenuItem = React.forwardRef<
       className
     )}
     {...props}
-  />
-))
+  >
+    {children} {/* Render children directly */}
+  </DropdownMenuPrimitive.Item>
+));
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
+
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
