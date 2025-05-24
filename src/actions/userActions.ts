@@ -9,9 +9,9 @@ import pool from '@/lib/db';
 import type { User, AuthFormState, ProfileFormState } from '@/lib/definitions';
 import { hashPassword, verifyPassword } from '@/lib/passwordUtils';
 import { sessionOptions } from '@/lib/session';
-import type { RowDataPacket, FieldPacket } from 'mysql2';
-import { verifyTurnstileToken } from '@/lib/turnstile';
-import { ProfileFormSchema } from '@/lib/schemas'; // Import the schema
+import type { RowDataPacket } from 'mysql2';
+import { verifyCaptchaToken } from '@/lib/captcha'; // Updated import
+import { ProfileFormSchema } from '@/lib/schemas';
 
 interface AppSessionData {
   user?: User;
@@ -21,7 +21,7 @@ const RegisterSchema = z.object({
   username: z.string().min(3, '用户名至少需要3个字符').max(50, '用户名不能超过50个字符'),
   password: z.string().min(6, '密码至少需要6个字符'),
   confirmPassword: z.string(),
-  turnstileToken: z.string().min(1, '请完成人机验证。'),
+  captchaToken: z.string().min(1, '请完成人机验证。'), // Renamed from turnstileToken
 }).refine((data) => data.password === data.confirmPassword, {
   message: '两次输入的密码不一致',
   path: ['confirmPassword'],
@@ -30,10 +30,8 @@ const RegisterSchema = z.object({
 const LoginSchema = z.object({
   username: z.string().min(1, '请输入用户名'),
   password: z.string().min(1, '请输入密码'),
-  turnstileToken: z.string().min(1, '请完成人机验证。'),
+  captchaToken: z.string().min(1, '请完成人机验证。'), // Renamed from turnstileToken
 });
-
-// ProfileFormSchema is now imported from '@/lib/schemas'
 
 export async function register(
     prevState: AuthFormState | undefined,
@@ -50,11 +48,11 @@ export async function register(
     };
   }
 
-  const { username, password, turnstileToken } = validatedFields.data;
+  const { username, password, captchaToken } = validatedFields.data; // Renamed
 
-  const isHuman = await verifyTurnstileToken(turnstileToken);
+  const isHuman = await verifyCaptchaToken(captchaToken); // Updated call
   if (!isHuman) {
-    return { message: '人机验证失败，请重试。' };
+    return { message: '人机验证失败，请重试。', errors: { captchaToken: ['验证无效'] } };
   }
 
   try {
@@ -64,7 +62,6 @@ export async function register(
     }
 
     const hashedPassword = await hashPassword(password);
-    // Initialize new users with oobe_completed = false
     await pool.query('INSERT INTO users (username, password_hash, oobe_completed) VALUES (?, ?, ?)', [username, hashedPassword, false]);
 
   } catch (error) {
@@ -90,11 +87,11 @@ export async function login(
     };
   }
 
-  const { username, password, turnstileToken } = validatedFields.data;
+  const { username, password, captchaToken } = validatedFields.data; // Renamed
 
-  const isHuman = await verifyTurnstileToken(turnstileToken);
+  const isHuman = await verifyCaptchaToken(captchaToken); // Updated call
   if (!isHuman) {
-    return { message: '人机验证失败，请重试。' };
+    return { message: '人机验证失败，请重试。', errors: { captchaToken: ['验证无效'] } };
   }
 
   try {
@@ -113,19 +110,17 @@ export async function login(
     const cookieStore = await cookies();
     const session = await getIronSession<AppSessionData>(cookieStore, sessionOptions);
     
-    // Parse style_preferences if it's a string (MySQL JSON can return as string)
     let stylePrefs: string[] = [];
     if (typeof userRow.style_preferences === 'string') {
         try {
             stylePrefs = JSON.parse(userRow.style_preferences);
         } catch (e) {
             console.error("Failed to parse style_preferences from DB string:", userRow.style_preferences);
-            stylePrefs = []; // Default to empty array on parse error
+            stylePrefs = []; 
         }
     } else if (Array.isArray(userRow.style_preferences)) {
         stylePrefs = userRow.style_preferences;
     }
-
 
     session.user = {
       id: userRow.id,
@@ -133,7 +128,7 @@ export async function login(
       gender: userRow.gender,
       age: userRow.age,
       style_preferences: stylePrefs,
-      oobe_completed: !!userRow.oobe_completed, // Ensure boolean
+      oobe_completed: !!userRow.oobe_completed,
     };
     await session.save();
 
@@ -173,8 +168,8 @@ export async function updateUserProfile(
 
   const rawFormData = {
     gender: formData.get('gender') || undefined,
-    age: formData.get('age'), // Keep as string for Zod preprocess
-    stylePreferences: formData.getAll('stylePreferences'), // Handles multiple checkboxes
+    age: formData.get('age'), 
+    stylePreferences: formData.getAll('stylePreferences'), 
   };
   
   const validatedFields = ProfileFormSchema.safeParse(rawFormData);
@@ -194,7 +189,6 @@ export async function updateUserProfile(
       [gender || null, age === undefined ? null : age, JSON.stringify(stylePreferences || []), user.id]
     );
 
-    // Update session
     const cookieStore = await cookies();
     const session = await getIronSession<AppSessionData>(cookieStore, sessionOptions);
     if (session.user) {
@@ -204,10 +198,8 @@ export async function updateUserProfile(
       await session.save();
     }
     
-    // Fetch updated user data to return
     const [updatedUserRows] = await pool.query<RowDataPacket[]>('SELECT id, username, gender, age, style_preferences, oobe_completed FROM users WHERE id = ?', [user.id]);
     const updatedUser = updatedUserRows[0] as User | undefined;
-
 
     return { success: true, message: '个人信息已成功更新！', user: updatedUser };
   } catch (error) {
@@ -225,7 +217,6 @@ export async function markOobeAsCompleted(): Promise<{ success: boolean; message
   try {
     await pool.query('UPDATE users SET oobe_completed = ? WHERE id = ?', [true, user.id]);
 
-    // Update session
     const cookieStore = await cookies();
     const session = await getIronSession<AppSessionData>(cookieStore, sessionOptions);
     if (session.user) {

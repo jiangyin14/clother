@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
@@ -16,7 +16,7 @@ import { EXPLORABLE_ITEMS, MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants
 import type { ExplorableItem } from '@/lib/definitions';
 import { handleExploreOutfitAction, handleGenerateOutfitImageAction } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
+import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
 
 export default function ExplorePage() {
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
@@ -29,8 +29,7 @@ export default function ExplorePage() {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
   const [showResults, setShowResults] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // Turnstile token state
-
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
 
   const { toast } = useToast();
 
@@ -45,7 +44,7 @@ export default function ExplorePage() {
   };
 
   const generateNewOutfit = useCallback(async (isRefresh: boolean = false) => {
-    if (!turnstileToken) {
+    if (!captchaToken) { // Updated condition
       toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
       return;
     }
@@ -71,12 +70,11 @@ export default function ExplorePage() {
     }
     setShowResults(true);
 
-
     const selectedItemNames = selectedItems.map(item => item.name);
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, turnstileToken);
+      const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, captchaToken); // Updated call
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       if (!isRefresh) {
@@ -104,8 +102,7 @@ export default function ExplorePage() {
       setIsLoadingRecommendation(false);
       setIsLoadingImage(false);
     }
-  }, [selectedItems, selectedMoods, selectedWeather, toast, turnstileToken]);
-
+  }, [selectedItems, selectedMoods, selectedWeather, toast, captchaToken]); // Updated dependency
 
   if (!clientLoaded) {
     return (
@@ -115,7 +112,7 @@ export default function ExplorePage() {
     );
   }
 
-  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather && !!turnstileToken;
+  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather && !!captchaToken; // Updated condition
 
   return (
     <div className="container mx-auto font-sans">
@@ -184,7 +181,7 @@ export default function ExplorePage() {
                <CardDescription>请完成验证以获取建议。</CardDescription>
             </CardHeader>
             <CardContent>
-                <TurnstileWidget onTokenChange={setTurnstileToken} />
+                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
             </CardContent>
           </Card>
           

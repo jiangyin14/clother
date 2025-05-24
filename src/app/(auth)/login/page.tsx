@@ -3,18 +3,18 @@
 
 import Link from 'next/link';
 import { useFormStatus } from 'react-dom';
-import { useActionState, useState } from 'react'; // Added useState
+import { useActionState, useState } from 'react';
 import { login } from '@/actions/userActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSearchParams } from 'next/navigation';
-import { Alert, AlertDescription } from '@/components/ui/alert'; // Removed AlertTitle
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LogIn } from 'lucide-react';
-import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
+import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
 
-function LoginButton({ disabled }: { disabled?: boolean }) { // Added disabled prop
+function LoginButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" aria-disabled={pending || disabled} disabled={pending || disabled}>
@@ -27,7 +27,7 @@ export default function LoginPage() {
   const [state, dispatch] = useActionState(login, undefined);
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
 
   return (
     <Card className="shadow-xl">
@@ -63,14 +63,14 @@ export default function LoginPage() {
           
           <div className="space-y-2">
             <Label>人机验证</Label>
-            <TurnstileWidget onTokenChange={setTurnstileToken} />
-            <input type="hidden" name="turnstileToken" value={turnstileToken || ''} />
-            {state?.errors?.turnstileToken && <p className="text-sm text-destructive">{state.errors.turnstileToken.join(', ')}</p>}
+            <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
+            <input type="hidden" name="captchaToken" value={captchaToken || ''} /> {/* Renamed */}
+            {state?.errors?.captchaToken && <p className="text-sm text-destructive">{state.errors.captchaToken.join(', ')}</p>}
           </div>
 
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <LoginButton disabled={!turnstileToken} />
+          <LoginButton disabled={!captchaToken} /> {/* Updated disabled condition */}
           <p className="text-center text-sm text-muted-foreground">
             还没有账户？{' '}
             <Link href="/register" className="font-medium text-primary hover:underline">

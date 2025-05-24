@@ -6,17 +6,16 @@ export interface User {
   age?: number | null;
   style_preferences?: string[] | null;
   oobe_completed?: boolean;
-  // password_hash should not be exposed to client
 }
 
 export interface ClothingItem {
-  id: string; // client-generated or from DB
+  id: string; 
   name: string;
-  imageUrl: string; // Can be data URI for uploaded, or URL for default/stored
+  imageUrl: string; 
   attributes: string[];
   isDefault?: boolean;
-  user_id?: number; // Foreign key to users table
-  created_at?: string; // Or Date
+  user_id?: number; 
+  created_at?: string; 
 }
 
 export interface WeatherOption {
@@ -28,24 +27,23 @@ export interface WeatherOption {
 export interface MoodOption {
   value: string;
   label: string;
-  icon?: React.ElementType; // Optional icon for moods
+  icon?: React.ElementType; 
 }
 
 export interface ExplorableItem {
   id: string;
   name: string;
   description: string;
-  category: string; // e.g., 'Top', 'Accessory', 'Outerwear'
+  category: string; 
 }
 
-// For server actions, it's good to define expected shapes for form data
 export type AuthFormState = {
   message?: string;
   errors?: {
     username?: string[];
     password?: string[];
-    confirmPassword?: string[]; // For registration
-    turnstileToken?: string[];
+    confirmPassword?: string[]; 
+    captchaToken?: string[]; // Changed from turnstileToken
   };
   success?: boolean;
 };
@@ -56,10 +54,10 @@ export type ProfileFormState = {
     gender?: string[];
     age?: string[];
     stylePreferences?: string[];
-    general?: string[]; // For general form errors
+    general?: string[]; 
   };
   success?: boolean;
-  user?: User | null; // To pass back updated user info if needed
+  user?: User | null; 
 };
 
 export interface GenderOption {

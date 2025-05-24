@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { getUserFromSession } from '@/actions/userActions'; 
-import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
+import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
 
 export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
@@ -27,8 +27,7 @@ export default function RecommendationPage() {
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
   const [isLoadingCloset, setIsLoadingCloset] = useState(true); 
   const [isLoggedIn, setIsLoggedIn] = useState(false); 
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null); // Turnstile token state
-
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
 
   const { toast } = useToast();
 
@@ -121,7 +120,7 @@ export default function RecommendationPage() {
   };
 
   const handleGetRecommendation = async () => {
-    if (!turnstileToken) {
+    if (!captchaToken) { // Updated condition
       toast({ title: '人机验证未完成', description: '请先完成人机验证挑战。', variant: 'destructive' });
       return;
     }
@@ -149,7 +148,7 @@ export default function RecommendationPage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes, turnstileToken);
+      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, allAttributes, captchaToken); // Updated call
       setRecommendation(result.recommendedOutfit);
       toast({ title: "推荐已准备好！", description: "我们为你找到了一套服装。" });
     } catch (error) {
@@ -177,7 +176,7 @@ export default function RecommendationPage() {
                                myClosetItems.length > 0 && 
                                selectedMoods.length > 0 && 
                                !!selectedWeather &&
-                               !!turnstileToken;
+                               !!captchaToken; // Updated condition
 
   return (
     <div className="container mx-auto font-sans">
@@ -217,7 +216,7 @@ export default function RecommendationPage() {
                 <CardDescription>请完成以下验证以继续。</CardDescription>
             </CardHeader>
             <CardContent>
-                <TurnstileWidget onTokenChange={setTurnstileToken} />
+                <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
             </CardContent>
           </Card>
               

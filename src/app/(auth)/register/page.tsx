@@ -2,8 +2,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
-import { useActionState, useState } from 'react'; // Added useState
+import { useFormStatus } from 'react-dom';
+import { useActionState, useState } from 'react';
 import { register } from '@/actions/userActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UserPlus } from 'lucide-react';
-import TurnstileWidget from '@/components/TurnstileWidget'; // Import TurnstileWidget
+import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
 
-function RegisterButton({ disabled }: { disabled?: boolean }) { // Added disabled prop
+function RegisterButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" aria-disabled={pending || disabled} disabled={pending || disabled}>
@@ -24,7 +24,7 @@ function RegisterButton({ disabled }: { disabled?: boolean }) { // Added disable
 
 export default function RegisterPage() {
   const [state, dispatch] = useActionState(register, undefined);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null); // Renamed
 
   return (
     <Card className="shadow-xl">
@@ -60,14 +60,14 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <Label>人机验证</Label>
-            <TurnstileWidget onTokenChange={setTurnstileToken} />
-            <input type="hidden" name="turnstileToken" value={turnstileToken || ''} />
-            {state?.errors?.turnstileToken && <p className="text-sm text-destructive">{state.errors.turnstileToken.join(', ')}</p>}
+            <CaptchaWidget onTokenChange={setCaptchaToken} className="mx-auto" /> {/* Updated component */}
+            <input type="hidden" name="captchaToken" value={captchaToken || ''} /> {/* Renamed */}
+            {state?.errors?.captchaToken && <p className="text-sm text-destructive">{state.errors.captchaToken.join(', ')}</p>}
           </div>
 
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <RegisterButton disabled={!turnstileToken} />
+          <RegisterButton disabled={!captchaToken} /> {/* Updated disabled condition */}
            <p className="text-center text-sm text-muted-foreground">
             已经有账户了？{' '}
             <Link href="/login" className="font-medium text-primary hover:underline">

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,32 +33,32 @@ body {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 200 17% 93%; /* Slightly darker variant of page background */
+    --radius: 0.75rem; /* Increased from 0.5rem for more rounded cards */
+    --sidebar-background: 200 17% 93%; 
     --sidebar-foreground: 210 25% 25%;
-    --sidebar-primary: 183 20% 60%; /* Slightly darker primary */
+    --sidebar-primary: 183 20% 60%; 
     --sidebar-primary-foreground: 210 25% 10%;
-    --sidebar-accent: 12 26% 68%; /* Slightly darker accent */
+    --sidebar-accent: 12 26% 68%; 
     --sidebar-accent-foreground: 210 25% 10%;
     --sidebar-border: 200 10% 85%;
     --sidebar-ring: 183 20% 60%;
   }
 
   .dark {
-    --background: 200 10% 10%; /* Very dark grey-blue */
-    --foreground: 200 15% 85%; /* Light grey-blue */
+    --background: 200 10% 10%; 
+    --foreground: 200 15% 85%; 
     --card: 200 10% 15%;
     --card-foreground: 200 15% 85%;
     --popover: 200 10% 15%;
     --popover-foreground: 200 15% 85%;
-    --primary: 183 25% 50%; /* Darker, slightly more saturated blue */
-    --primary-foreground: 200 15% 90%; /* Light foreground */
+    --primary: 183 25% 50%; 
+    --primary-foreground: 200 15% 90%; 
     --secondary: 200 10% 20%;
     --secondary-foreground: 200 15% 85%;
     --muted: 200 10% 25%;
     --muted-foreground: 200 10% 55%;
-    --accent: 12 30% 60%; /* Darker, slightly more saturated pink */
-    --accent-foreground: 200 15% 90%; /* Light foreground */
+    --accent: 12 30% 60%; 
+    --accent-foreground: 200 15% 90%; 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 200 10% 25%;
@@ -85,5 +86,32 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .hcaptcha-widget-container {
+    @apply w-full max-w-[303px] mx-auto my-2; /* Default max-width and centering */
+    /* This div directly contains the div hCaptcha renders into */
+  }
+  .hcaptcha-widget-container > div { /* The div hCaptcha injects */
+    @apply mx-auto; /* Center the hCaptcha element if its container is wider */
+    /* On smaller screens, we might scale this div */
+  }
+}
+
+/* Example for responsive scaling of hCaptcha widget */
+/* You might need to adjust breakpoints and scale factors */
+@media (max-width: 340px) { /* When screen is narrower than hCaptcha's default width */
+  .hcaptcha-widget-container > div {
+    transform: scale(0.9); /* Scale down a bit */
+    transform-origin: center;
+    /* If scaling causes layout issues, you might need to adjust container height or use negative margins */
+  }
+}
+@media (max-width: 300px) {
+  .hcaptcha-widget-container > div {
+    transform: scale(0.85); /* Scale down more */
+    transform-origin: center;
   }
 }

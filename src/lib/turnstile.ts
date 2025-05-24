@@ -1,55 +1,14 @@
 
 'use server';
 
-interface TurnstileVerificationResponse {
-  success: boolean;
-  'error-codes'?: string[];
-  challenge_ts?: string;
-  hostname?: string;
-  action?: string;
-  cdata?: string;
-}
+// This file is no longer used as we switched to hCaptcha.
+// It can be safely deleted. For now, keeping it empty or with a note.
+
+// console.log("Cloudflare Turnstile verification logic has been replaced by hCaptcha.");
 
 export async function verifyTurnstileToken(token: string | undefined | null, remoteIp?: string): Promise<boolean> {
-  if (!token) {
-    console.warn('Turnstile token is missing.');
-    return false;
-  }
-
-  const secretKey = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
-
-  if (!secretKey) {
-    console.error('Cloudflare Turnstile secret key is not configured on the server.');
-    // In a real app, you might want to throw an error or handle this more gracefully
-    // For now, fail open in dev if not set, but log an error. In prod, this should strictly be false.
-    if (process.env.NODE_ENV === 'production') {
-        return false;
-    }
-    console.warn('DEVELOPMENT: Turnstile secret key not set, verification skipped (failing open).');
-    return true; // Fail open in non-production if secret is missing, for easier development
-  }
-
-  const body = new URLSearchParams();
-  body.append('secret', secretKey);
-  body.append('response', token);
-  if (remoteIp) {
-    body.append('remoteip', remoteIp);
-  }
-
-  try {
-    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      body: body,
-    });
-
-    const data: TurnstileVerificationResponse = await response.json();
-
-    if (!data.success) {
-      console.warn('Turnstile verification failed:', data['error-codes']?.join(', '));
-    }
-    return data.success;
-  } catch (error) {
-    console.error('Error verifying Turnstile token:', error);
-    return false;
-  }
+  console.warn("verifyTurnstileToken is deprecated. Use verifyCaptchaToken (hCaptcha) instead.");
+  // To avoid breaking existing calls if any are missed during refactor,
+  // return false or throw an error. For safety, return false.
+  return false;
 }
