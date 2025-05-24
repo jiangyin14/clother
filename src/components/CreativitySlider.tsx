@@ -31,7 +31,6 @@ const CreativitySlider: React.FC<CreativitySliderProps> = ({ value, onValueChang
             <Label htmlFor="creativity-slider" className="text-sm font-medium">
               当前选择: <span className="font-bold text-primary">{value}</span> / 10
             </Label>
-            <span className="text-xs text-muted-foreground">(提示: AI将基于1-15的范围理解此值)</span>
           </div>
           <Slider
             id="creativity-slider"
