@@ -3,52 +3,64 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { sessionOptions } from './lib/session'; // Adjust path as necessary
+import type { User } from './lib/definitions';
+
+interface AppSessionData {
+  user?: User;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Define public paths that don't require authentication
-  const publicPaths = ['/login', '/register', '/api/auth']; // Add any other public paths like /about, /contact
-
-  // Check if the current path is public
-  const isPublicPath = publicPaths.some(path => pathname.startsWith(path)) || pathname === '/';
+  const publicPaths = ['/login', '/register']; 
+  const isApiAuthRoute = pathname.startsWith('/api/auth'); // Specific check for API auth routes
+  const isStaticAsset = pathname.startsWith('/_next') || pathname.startsWith('/favicon.ico');
 
 
   // Get session
-  // For middleware, we need to pass the request and a dummy response object
-  // as `iron-session` expects them for cookie handling.
   const res = NextResponse.next();
-  const session = await getIronSession(request, res, sessionOptions);
+  const session = await getIronSession<AppSessionData>(request, res, sessionOptions);
+  const user = session.user;
 
   // If trying to access a protected route and not logged in, redirect to login
-  if (!session.user && !isPublicPath && !pathname.startsWith('/_next') && !pathname.startsWith('/favicon.ico')) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!user && !isPublicPath.some(path => pathname.startsWith(path)) && !isApiAuthRoute && !isStaticAsset) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect_to', pathname); // Optionally add redirect_to for better UX
+    return NextResponse.redirect(loginUrl);
   }
 
-  // If trying to access login/register page but already logged in, redirect to home
-  if (session.user && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/', request.url));
+  // If logged in
+  if (user) {
+    // If trying to access login/register page but already logged in, redirect to home (or OOBE if needed)
+    if (pathname === '/login' || pathname === '/register') {
+      return NextResponse.redirect(new URL(user.oobe_completed ? '/' : '/profile/setup', request.url));
+    }
+
+    // If OOBE is not completed, redirect to OOBE setup page,
+    // unless already on OOBE page, profile page (to allow editing before OOBE is formally "done"), or logging out.
+    if (!user.oobe_completed && 
+        pathname !== '/profile/setup' && 
+        !pathname.startsWith('/api/auth/logout') && // Allow logout
+        pathname !== '/profile' // Allow access to full profile page even during OOBE
+        ) {
+      return NextResponse.redirect(new URL('/profile/setup', request.url));
+    }
   }
 
-  return res; // Allow request to proceed, res contains any session cookies set by getIronSession
+  return res; 
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes, unless you want to protect them too)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * You might want to adjust this to include specific pages that need protection.
-     * For instance, if you want to protect '/dashboard/:path*', you can add it here.
-     * For now, let's protect all non-public, non-asset paths implicitly by the logic above.
+     * API routes under /api/auth are handled explicitly.
+     * Other /api routes might need specific protection if not public.
      */
-    // '/((?!api|_next/static|_next/image|favicon.ico).*)', // This is a common pattern
-    // Simpler: let the logic inside the middleware handle redirection for now.
-    // Apply middleware to all paths and then filter inside.
-     '/((?!_next/static|_next/image|favicon.ico|api/auth).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -16,6 +16,6 @@ export const sessionOptions: IronSessionOptions = {
 // This is type-safe for session data
 declare module 'iron-session' {
   interface IronSessionData {
-    user?: Pick<User, 'id' | 'username'>; // Store only necessary, non-sensitive user info
+    user?: User; // Store the full User object (excluding password_hash)
   }
 }

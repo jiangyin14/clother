@@ -2,9 +2,9 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useRef } from 'react'; // Added useRef
-import { LogIn, LogOut, UserPlus, UserCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Button is still used for non-trigger elements
+import React, { useRef } from 'react';
+import { LogIn, LogOut, UserPlus, UserCircle, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { logout } from '@/actions/userActions';
 import {
   DropdownMenu,
@@ -15,10 +15,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { User } from '@/lib/definitions';
-import { cn } from '@/lib/utils'; // For potential class merging
 
 interface AuthNavProps {
-  user: Pick<User, 'id' | 'username'> | null;
+  user: User | null;
 }
 
 export default function AuthNav({ user }: AuthNavProps) {
@@ -32,21 +31,26 @@ export default function AuthNav({ user }: AuthNavProps) {
     <div className="flex items-center gap-2">
       {user ? (
         <DropdownMenu>
-          {/* DropdownMenuTrigger now takes Button props and children directly */}
-          <DropdownMenuTrigger variant="ghost" className="flex items-center gap-2">
+          <DropdownMenuTrigger variant="ghost" className="flex items-center gap-2 px-2 py-1.5">
             <UserCircle size={20} />
             <span className="hidden sm:inline">{user.username}</span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>我的账户</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {/* Hidden form, triggered by DropdownMenuItem's onSelect */}
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center gap-2 w-full">
+                <Settings size={16} />
+                用户中心
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <form action={logout} ref={logoutFormRef} className="w-full" style={{ display: 'none' }}>
               <button type="submit" />
             </form>
             <DropdownMenuItem 
               onSelect={handleLogoutSelect} 
-              className="w-full text-left flex items-center gap-2 cursor-pointer"
+              className="w-full text-left flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
             >
               <LogOut size={16} />
               登出
@@ -55,14 +59,13 @@ export default function AuthNav({ user }: AuthNavProps) {
         </DropdownMenu>
       ) : (
         <>
-          {/* Button component is used directly here, no asChild involvement */}
-          <Button aschild variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" asChild>
             <Link href="/login" className="flex items-center gap-1.5">
               <LogIn size={16} />
               登录
             </Link>
           </Button>
-          <Button aschild variant="default" size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+          <Button variant="default" size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
             <Link href="/register" className="flex items-center gap-1.5">
               <UserPlus size={16} />
               注册

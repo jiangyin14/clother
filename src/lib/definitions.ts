@@ -2,6 +2,10 @@
 export interface User {
   id: number;
   username: string;
+  gender?: string | null;
+  age?: number | null;
+  style_preferences?: string[] | null;
+  oobe_completed?: boolean;
   // password_hash should not be exposed to client
 }
 
@@ -41,6 +45,29 @@ export type AuthFormState = {
     username?: string[];
     password?: string[];
     confirmPassword?: string[]; // For registration
+    turnstileToken?: string[];
   };
   success?: boolean;
 };
+
+export type ProfileFormState = {
+  message?: string;
+  errors?: {
+    gender?: string[];
+    age?: string[];
+    stylePreferences?: string[];
+    general?: string[]; // For general form errors
+  };
+  success?: boolean;
+  user?: User | null; // To pass back updated user info if needed
+};
+
+export interface GenderOption {
+  value: string;
+  label: string;
+}
+
+export interface StylePreferenceOption {
+  id: string;
+  label: string;
+}

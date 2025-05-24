@@ -16,13 +16,11 @@ import {
 } from '@/components/ui/sidebar';
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
-import { Home, Compass, PanelLeft } from 'lucide-react';
+import { Home, Compass, PanelLeft, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-// Removed: import { buttonVariants } from '@/components/ui/button'; // No longer needed here for SidebarTrigger
 import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
-// Removed: import { SheetTitle } from '@/components/ui/sheet'; // SheetTitle is handled internally if needed by Radix, or by specific sheet implementations
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -52,8 +50,6 @@ export default async function RootLayout({
         <SidebarProvider defaultOpen>
           <Sidebar collapsible="icon">
             <SidebarHeader className="p-4">
-              {/* AppLogo is rendered directly. If mobile sheet needs a title, 
-                  Sidebar component itself or SheetContent's usage should handle it. */}
               <AppLogo />
             </SidebarHeader>
             <SidebarContent>
@@ -80,6 +76,19 @@ export default async function RootLayout({
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                 {user && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      href="/profile"
+                      tooltip={{ children: "用户中心", side: "right", align: "center" }}
+                    >
+                      <span className="flex items-center gap-2">
+                        <UserCircle />
+                        <span>用户中心</span>
+                      </span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarContent>
              <div className="mt-auto p-2 border-t border-sidebar-border">
@@ -88,8 +97,7 @@ export default async function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
-              {/* SidebarTrigger no longer uses asChild from consumer */}
-              <SidebarTrigger variant="ghost" size="icon">
+              <SidebarTrigger>
                 <span className="flex items-center justify-center">
                   <PanelLeft className="h-5 w-5" />
                   <span className="sr-only">切换侧边栏</span>

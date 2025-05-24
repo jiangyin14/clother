@@ -1,4 +1,5 @@
-import type { ClothingItem, WeatherOption, MoodOption, ExplorableItem } from '@/lib/definitions';
+
+import type { ClothingItem, WeatherOption, MoodOption, ExplorableItem, GenderOption, StylePreferenceOption } from '@/lib/definitions';
 import { 
   CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, ThermometerSnowflake, Wind, 
   Smile, Meh, Frown, Zap, Coffee, ShieldCheck, Heart, Lightbulb, PartyPopper, Waves, Focus, Briefcase, Feather, BatteryLow, AlertTriangle 
@@ -87,4 +88,28 @@ export const EXPLORABLE_ITEMS: ExplorableItem[] = [
   { id: 'item-08', name: '皮革斜挎包', description: '实用且提升整体造型质感。', category: 'Accessory' },
   { id: 'item-09', name: '科技感冲锋衣', description: '防风防水，兼具功能与时尚。', category: 'Outerwear' },
   { id: 'item-10', name: '设计感耳环', description: '点缀造型，突出个性。', category: 'Accessory' },
+];
+
+export const GENDER_OPTIONS: GenderOption[] = [
+  { value: 'male', label: '男' },
+  { value: 'female', label: '女' },
+  { value: 'other', label: '其他' },
+  { value: 'prefer_not_to_say', label: '不愿透露' },
+];
+
+export const STYLE_PREFERENCES_OPTIONS: StylePreferenceOption[] = [
+  { id: 'casual', label: '休闲风' },
+  { id: 'formal', label: '正式风' },
+  { id: 'sporty', label: '运动风' },
+  { id: 'streetwear', label: '街头潮流' },
+  { id: 'minimalist', label: '简约风' },
+  { id: 'vintage', label: '复古风' },
+  { id: 'bohemian', label: '波西米亚' },
+  { id: 'artsy', label: '文艺风' },
+  { id: 'business', label: '商务风' },
+  { id: 'elegant', label: '优雅风' },
+  { id: 'preppy', label: '学院风' },
+  { id: 'punk', label: '朋克风' },
+  { id: 'ethnic', label: '民族风' },
+  { id: 'hip_hop', label: '嘻哈风' },
 ];
