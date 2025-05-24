@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -54,6 +53,10 @@ const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({
 
     const tryRenderWidget = () => {
       if (window.turnstile && turnstileContainerRef.current) {
+        // or if a widget was rendered by other means.
+        if (turnstileContainerRef.current.innerHTML !== '') {
+          turnstileContainerRef.current.innerHTML = ''; // Be cautious with this, might interfere
+        }
         const newWidgetId = window.turnstile.render(turnstileContainerRef.current, {
           sitekey: actualSiteKey,
           callback: (token: string) => {
