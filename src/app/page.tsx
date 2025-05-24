@@ -22,11 +22,11 @@ import { getUserFromSession } from '@/actions/userActions'; // To check login st
 export default function RecommendationPage() {
   const [myClosetItems, setMyClosetItems] = useState<ClothingItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [selectedWeather, setSelectedWeather] = useState<string>(WEATHER_OPTIONS[0]?.value || '');
+  const [selectedWeather, setSelectedWeather] = useState<string>(''); // Initial empty, will be auto-filled
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isGettingRecommendation, setIsGettingRecommendation] = useState(false);
-  const [isLoadingCloset, setIsLoadingCloset] = useState(true); // For loading state
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // To track login status
+  const [isLoadingCloset, setIsLoadingCloset] = useState(true); 
+  const [isLoggedIn, setIsLoggedIn] = useState(false); 
 
 
   const { toast } = useToast();
@@ -34,15 +34,13 @@ export default function RecommendationPage() {
   const fetchClosetItems = useCallback(async () => {
     setIsLoadingCloset(true);
     try {
-      const user = await getUserFromSession(); // Check if user is logged in
+      const user = await getUserFromSession(); 
       if (user) {
         setIsLoggedIn(true);
         const items = await getClosetItems();
         setMyClosetItems(items);
       } else {
         setIsLoggedIn(false);
-        // For non-logged-in users, maybe load defaults or keep empty
-        // setMyClosetItems(DEFAULT_CLOTHING_ITEMS.slice(0,1)); // Example: load one default if not logged in
         setMyClosetItems([]); 
       }
     } catch (error) {
@@ -72,30 +70,27 @@ export default function RecommendationPage() {
     };
     
     if (isLoggedIn) {
-        const result = await addClothingItem(newItemForState); // server action will add user_id
+        const result = await addClothingItem(newItemForState); 
         if ('error' in result) {
             toast({ title: "添加衣物失败", description: result.error, variant: "destructive" });
         } else {
-            // Add to local state optimistically or re-fetch. Here, we add then potentially re-fetch.
             setMyClosetItems((prevItems) => [result, ...prevItems]);
             toast({ title: "已添加衣物", description: `${result.name} 已保存到您的在线衣橱。` });
         }
     } else {
-        // For non-logged-in users, just add to local state
         setMyClosetItems((prevItems) => [newItemForState, ...prevItems]);
         toast({ title: "已添加衣物 (未登录)", description: `${newItemForState.name} 已添加到本地衣橱，登录后可保存。` });
     }
   };
   
   const handleAddDefaultClothing = (itemToAdd: ClothingItem) => {
-     // This function might need rethinking if default items are global vs per-user copies
-     // For now, if not logged in, it adds to local state.
-     // If logged in, it should ideally check DB, then add to DB and local state.
     if (!myClosetItems.find(item => item.id === itemToAdd.id)) {
       if (isLoggedIn) {
-        // If we want to copy default items to user's DB closet:
-        const itemToSave = { ...itemToAdd, id: `default-user-${user?.id}-${itemToAdd.id}`, isDefault: false }; // Make a user-specific copy
-        addClothingItem(itemToSave).then(res => {
+        // This assumes default items are not user-specific in the DB if added by a logged-in user
+        // A more robust way would be to copy the item data and assign a new ID and current user_id.
+        // For now, let's treat adding a "default" as adding its details to the user's closet
+        const itemToSaveToDb = { ...itemToAdd, id: `user-copy-${itemToAdd.id}-${Date.now()}`, isDefault: false };
+        addClothingItem(itemToSaveToDb).then(res => {
           if ('error' in res) {
             toast({ title: "添加失败", description: res.error, variant: "destructive" });
           } else {
@@ -122,7 +117,6 @@ export default function RecommendationPage() {
         toast({ title: "移除失败", description: result.error || "无法移除物品。", variant: "destructive" });
       }
     } else {
-      // For non-logged-in users, just remove from local state
       setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
       toast({ title: "已移除物品", description: "该物品已从本地衣橱中移除。" });
     }
@@ -134,13 +128,18 @@ export default function RecommendationPage() {
       return;
     }
     if (!selectedWeather) {
-      toast({ title: "缺少天气", description: "请选择当前的天气。", variant: "destructive" });
+      toast({ title: "缺少天气", description: "请选择或自动获取天气信息。", variant: "destructive" });
       return;
     }
-    if (myClosetItems.length === 0) {
-      toast({ title: "衣橱为空", description: "请先添加一些衣物到你的衣橱。", variant: "destructive" });
+    if (myClosetItems.length === 0 && !isLoggedIn) { // If not logged in, and local closet is empty
+      toast({ title: "衣橱为空", description: "请先添加一些衣物到你的本地衣橱。", variant: "destructive" });
       return;
     }
+    if (myClosetItems.length === 0 && isLoggedIn && !isLoadingCloset) { // If logged in, closet loaded and is empty
+      toast({ title: "在线衣橱为空", description: "请先添加一些衣物到您的在线衣橱。", variant: "destructive" });
+      return;
+    }
+
 
     setIsGettingRecommendation(true);
     setRecommendation(null); 
@@ -164,7 +163,7 @@ export default function RecommendationPage() {
     }
   };
   
-  if (isLoadingCloset && !myClosetItems.length) { // Show loader only if closet is empty and loading
+  if (isLoadingCloset && !myClosetItems.length) { 
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -187,7 +186,7 @@ export default function RecommendationPage() {
           <ClothingUploadForm onClothingAnalyzed={handleClothingAnalyzed} />
           <ClosetView
             myClosetItems={myClosetItems}
-            defaultClothingItems={isLoggedIn ? [] : DEFAULT_CLOTHING_ITEMS} // Show defaults only if not logged in and no DB items loaded
+            defaultClothingItems={isLoggedIn ? [] : DEFAULT_CLOTHING_ITEMS} 
             onAddDefaultClothing={handleAddDefaultClothing}
             onRemoveMyClothing={handleRemoveMyClothing}
             isLoading={isLoadingCloset}
@@ -196,41 +195,33 @@ export default function RecommendationPage() {
         </div>
 
         <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 self-start">
-         <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl">搭配场景</CardTitle>
-              <CardDescription>选择你的心情和天气，AI来帮你搭配。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <MoodWeatherInput
-                selectedMoods={selectedMoods}
-                onMoodSelectionChange={setSelectedMoods}
-                selectedWeather={selectedWeather}
-                onWeatherChange={setSelectedWeather}
-                weatherOptions={WEATHER_OPTIONS}
-                moodOptions={MOOD_OPTIONS}
-              />
+         <MoodWeatherInput
+            selectedMoods={selectedMoods}
+            onMoodSelectionChange={setSelectedMoods}
+            selectedWeather={selectedWeather}
+            onWeatherChange={setSelectedWeather}
+            weatherOptions={WEATHER_OPTIONS}
+            moodOptions={MOOD_OPTIONS}
+          />
               
-              <Button 
-                onClick={handleGetRecommendation} 
-                disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather}
-                className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
-                size="lg"
-              >
-                {isGettingRecommendation ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    正在为你寻找风格...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    获取服装推荐
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          <Button 
+            onClick={handleGetRecommendation} 
+            disabled={isGettingRecommendation || myClosetItems.length === 0 || selectedMoods.length === 0 || !selectedWeather}
+            className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-md"
+            size="lg"
+          >
+            {isGettingRecommendation ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                正在为你寻找风格...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-5 w-5" />
+                获取服装推荐
+              </>
+            )}
+          </Button>
           <RecommendationDisplay recommendation={recommendation} isLoading={isGettingRecommendation} />
         </div>
       </div>
@@ -241,3 +232,4 @@ export default function RecommendationPage() {
     </div>
   );
 }
+
