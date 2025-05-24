@@ -52,6 +52,7 @@ export default function ProfilePage() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [skinToneValue, setSkinToneValue] = useState<string>('');
   const [weightValue, setWeightValue] = useState<string>('');
+  const [heightValue, setHeightValue] = useState<string>(''); // 新增
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
   const [state, dispatch] = useActionState(updateUserProfile, initialState);
@@ -68,6 +69,7 @@ export default function ProfilePage() {
           setSelectedStyles(user.style_preferences || []);
           setSkinToneValue(user.skinTone || '');
           setWeightValue(user.weight?.toString() || '');
+          setHeightValue(user.height?.toString() || ''); // 新增
         } else {
           router.push('/login'); 
         }
@@ -91,6 +93,7 @@ export default function ProfilePage() {
         setSelectedStyles(state.user.style_preferences || []);
         setSkinToneValue(state.user.skinTone || '');
         setWeightValue(state.user.weight?.toString() || '');
+        setHeightValue(state.user.height?.toString() || ''); // 新增
       }
        router.refresh(); 
     } else if (!state.success && state.message) {
@@ -116,6 +119,9 @@ export default function ProfilePage() {
     setWeightValue(event.target.value);
   };
 
+  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => { // 新增
+    setHeightValue(event.target.value);
+  };
 
   if (isLoadingUser) {
     return (
@@ -131,6 +137,7 @@ export default function ProfilePage() {
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" /> {/* For Height */}
           <Label>穿衣偏好</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
             {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -207,6 +214,19 @@ export default function ProfilePage() {
             />
             {state?.errors?.weight && <p className="text-sm text-destructive">{state.errors.weight.join(', ')}</p>}
           </div>
+          <div className="space-y-2"> {/* 新增身高字段 */}
+            <Label htmlFor="height">身高 (cm)</Label>
+            <Input
+              id="height"
+              name="height"
+              type="number"
+              placeholder="请输入您的身高 (单位: 厘米)"
+              value={heightValue}
+              onChange={handleHeightChange}
+              min="50"
+            />
+            {state?.errors?.height && <p className="text-sm text-destructive">{state.errors.height.join(', ')}</p>}
+          </div>
           <StylePreferencesInput 
             selectedPreferences={selectedStyles}
             onPreferenceChange={handleStylePreferenceChange}
@@ -223,3 +243,4 @@ export default function ProfilePage() {
     </>
   );
 }
+

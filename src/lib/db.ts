@@ -17,7 +17,7 @@ export default pool;
 
 // Example DDL for tables (for reference, execute this in your MySQL client)
 /*
--- Users Table DDL (Updated for skin_tone and weight)
+-- Users Table DDL (Updated for skin_tone, weight, and height)
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
@@ -25,8 +25,9 @@ CREATE TABLE IF NOT EXISTS users (
     gender VARCHAR(30) NULL,
     age INT UNSIGNED NULL,
     style_preferences JSON NULL,
-    skin_tone VARCHAR(50) NULL,                 -- 新增：肤色
-    weight INT UNSIGNED NULL,                   -- 新增：体重 (kg)
+    skin_tone VARCHAR(50) NULL,                 -- 肤色
+    weight INT UNSIGNED NULL,                   -- 体重 (kg)
+    height INT UNSIGNED NULL,                   -- 新增：身高 (cm)
     oobe_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -56,5 +57,7 @@ ADD COLUMN age INT UNSIGNED NULL AFTER gender,
 ADD COLUMN style_preferences JSON NULL AFTER age,
 ADD COLUMN skin_tone VARCHAR(50) NULL AFTER style_preferences,
 ADD COLUMN weight INT UNSIGNED NULL AFTER skin_tone,
-ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER weight;
+ADD COLUMN height INT UNSIGNED NULL AFTER weight, -- 新增身高字段
+ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER height; -- 调整oobe_completed位置
 */
+

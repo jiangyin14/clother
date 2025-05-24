@@ -23,6 +23,7 @@ const GenerateOutfitImageInputSchema = z.object({
   userAge: z.number().int().positive().optional().describe('模特大致年龄。'),
   userWeightDescription: z.string().optional().describe('模特大致体重或体型描述，例如：约60公斤，中等身材，健硕。'),
   userSkinTone: z.string().optional().describe('模特肤色，例如：白皙，自然，健康小麦色，深色。'),
+  userHeightDescription: z.string().optional().describe('模特大致身高描述，例如：约175厘米，高挑。'), // 新增
 });
 export type GenerateOutfitImageInput = z.infer<typeof GenerateOutfitImageInputSchema>;
 
@@ -47,14 +48,12 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
   if (validatedInput.userWeightDescription) {
     personaDescription += `，体型${validatedInput.userWeightDescription}`;
   }
+  if (validatedInput.userHeightDescription) { // 新增
+    personaDescription += `，${validatedInput.userHeightDescription}`;
+  }
   
-  // SiliconFlow/Kolors expects more direct prompting.
-  // Let's try a template that emphasizes the clothing on the described persona.
   const imagePrompt = `${personaDescription}，穿着：${validatedInput.outfitDescription}。风格时尚，照片级真实感，全身或半身像，背景简洁。`;
-  // Alternative simpler prompt:
-  // const imagePrompt = `时尚模特图：${personaDescription} 穿着 ${validatedInput.outfitDescription}。`;
-
-
+  
   console.log("Generating image with prompt:", imagePrompt);
 
   try {
@@ -65,21 +64,17 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: "Alibaba-Tongyi/pai-diffusion-artist-xl-uhd-v1.0", // Using a recommended artist model
+        model: "Alibaba-Tongyi/pai-diffusion-artist-xl-uhd-v1.0", 
         prompt: imagePrompt,
-        n: 1, // Number of images to generate
-        size: '1024x1024', // Or '512x512' for faster generation
+        n: 1, 
+        size: '1024x1024', 
         response_format: 'url', 
-        // Additional parameters for Kolors/SiliconFlow if available and relevant:
-        // style_preset: "photographic", // Example, check API docs for actual presets
-        // negative_prompt: "cartoon, anime, (deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck",
       }),
     });
 
     if (!apiResponse.ok) {
       const errorBody = await apiResponse.text();
       console.error('SiliconFlow Image API Error:', apiResponse.status, errorBody);
-      // Check for safety filter related errors specifically
       if (errorBody.includes("SAFETY_FILTER_TRIGGERED") || errorBody.includes("prompt violates safety policy")) {
          throw new Error(`图片生成失败，提示词可能触发了内容安全策略。请尝试调整描述。原始错误: ${errorBody}`);
       }
@@ -104,7 +99,7 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
 
     const imageArrayBuffer = await imageContentResponse.arrayBuffer();
     const imageBase64 = Buffer.from(imageArrayBuffer).toString('base64');
-    const imageMimeType = imageContentResponse.headers.get('content-type') || 'image/png'; // Fallback to image/png
+    const imageMimeType = imageContentResponse.headers.get('content-type') || 'image/png'; 
     const imageDataUri = `data:${imageMimeType};base64,${imageBase64}`;
     
     const result = GenerateOutfitImageOutputSchema.parse({ imageDataUri });
@@ -115,3 +110,4 @@ export async function generateOutfitImage(input: GenerateOutfitImageInput): Prom
     throw error;
   }
 }
+

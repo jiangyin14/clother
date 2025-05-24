@@ -6,10 +6,9 @@ import { recommendNewOutfit } from '@/ai/flows/recommend-new-outfit-flow';
 import { generateOutfitImage } from '@/ai/flows/generate-outfit-image-flow';
 import { generateClothingName } from '@/ai/flows/generate-clothing-name-flow';
 import { getClosetItems } from '@/actions/closetActions'; 
-import { getUserFromSession } from '@/actions/userActions'; // Import to get user details
+import { getUserFromSession } from '@/actions/userActions'; 
 
 import type { IdentifyClothingAttributesOutput } from '@/ai/flows/identify-clothing-attributes';
-// type RecommendClothingFlowOutput is defined in the flow itself
 import type { RecommendNewOutfitOutput } from '@/ai/flows/recommend-new-outfit-flow';
 import type { GenerateOutfitImageOutput } from '@/ai/flows/generate-outfit-image-flow';
 import type { GenerateClothingNameOutput } from '@/ai/flows/generate-clothing-name-flow';
@@ -51,7 +50,7 @@ export async function handleGetRecommendationAction(
   }
 
   try {
-    const user = await getUserFromSession(); // Get current user
+    const user = await getUserFromSession(); 
     const closetItems = await getClosetItems(); 
     if (closetItems.length === 0) {
       return { 
@@ -74,13 +73,13 @@ export async function handleGetRecommendationAction(
       moodKeywords,
       weatherInformation,
       clothingKeywords: allAttributes,
-      userGender: user?.gender || undefined, // Pass gender if available
-      userAge: user?.age || undefined,       // Pass age if available
+      userGender: user?.gender || undefined, 
+      userAge: user?.age || undefined,       
     });
     
     return {
       recommendedOutfit: result.recommendedOutfit,
-      imagePromptDetails: result.imagePromptDetails, // This is clothing description only
+      imagePromptDetails: result.imagePromptDetails, 
     };
   } catch (error) {
     console.error('Error getting recommendation:', error);
@@ -97,15 +96,15 @@ export async function handleExploreOutfitAction(
     throw new Error('探索物品、心情和天气信息都是必需的。');
   }
   try {
-    const user = await getUserFromSession(); // Get current user
+    const user = await getUserFromSession(); 
     const result = await recommendNewOutfit({
       selectedItemNames: selectedNewItems,
       moodKeywords,
       weatherInformation,
-      userGender: user?.gender || undefined, // Pass gender if available
-      userAge: user?.age || undefined,       // Pass age if available
+      userGender: user?.gender || undefined, 
+      userAge: user?.age || undefined,       
     });
-    return result; // result.imagePromptDetails is clothing description only
+    return result; 
   } catch (error) {
     console.error('Error exploring new outfit:', error);
     throw new Error('探索新搭配失败，请重试。');
@@ -113,7 +112,7 @@ export async function handleExploreOutfitAction(
 }
 
 export async function handleGenerateOutfitImageAction(
-  outfitClothingDescription: string // This is ONLY the clothing part
+  outfitClothingDescription: string 
 ): Promise<GenerateOutfitImageOutput> {
   if (!outfitClothingDescription) {
     throw new Error('缺少服装描述，无法生成图片。');
@@ -123,8 +122,10 @@ export async function handleGenerateOutfitImageAction(
     let userWeightDescription: string | undefined = undefined;
     if (user?.weight) {
       userWeightDescription = `约 ${user.weight} 公斤`;
-      // Could add more logic here to map weight to general body type descriptions if desired
-      // e.g., if (user.weight < 50) userWeightDescription = "偏瘦身材";
+    }
+    let userHeightDescription: string | undefined = undefined; // 新增
+    if (user?.height) { // 新增
+      userHeightDescription = `身高约 ${user.height} 厘米`; // 新增
     }
 
     const result = await generateOutfitImage({ 
@@ -133,6 +134,7 @@ export async function handleGenerateOutfitImageAction(
       userAge: user?.age || undefined,
       userWeightDescription: userWeightDescription,
       userSkinTone: user?.skinTone || undefined,
+      userHeightDescription: userHeightDescription, // 新增
     });
     return result;
   } catch (error) {
@@ -143,3 +145,4 @@ export async function handleGenerateOutfitImageAction(
     throw new Error('生成服装图片失败，请重试。');
   }
 }
+

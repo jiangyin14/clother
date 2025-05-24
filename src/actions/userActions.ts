@@ -95,8 +95,8 @@ export async function login(
   }
 
   try {
-    const [users] = await pool.query<RowDataPacket[]>('SELECT id, username, password_hash, gender, age, style_preferences, skin_tone, weight, oobe_completed FROM users WHERE username = ?', [username]);
-    const userRow = users[0] as User & { password_hash: string; skin_tone?: string; weight?: number; } | undefined;
+    const [users] = await pool.query<RowDataPacket[]>('SELECT id, username, password_hash, gender, age, style_preferences, skin_tone, weight, height, oobe_completed FROM users WHERE username = ?', [username]);
+    const userRow = users[0] as User & { password_hash: string; skin_tone?: string; weight?: number; height?: number; } | undefined;
 
     if (!userRow) {
       return { message: '用户名或密码错误。' };
@@ -130,6 +130,7 @@ export async function login(
       style_preferences: stylePrefs,
       skinTone: userRow.skin_tone,
       weight: userRow.weight,
+      height: userRow.height,
       oobe_completed: !!userRow.oobe_completed,
     };
     await session.save();
@@ -174,6 +175,7 @@ export async function updateUserProfile(
     stylePreferences: formData.getAll('stylePreferences'), 
     skinTone: formData.get('skinTone') || undefined,
     weight: formData.get('weight'),
+    height: formData.get('height'), // 新增
   };
   
   const validatedFields = ProfileFormSchema.safeParse(rawFormData);
@@ -185,17 +187,18 @@ export async function updateUserProfile(
     };
   }
 
-  const { gender, age, stylePreferences, skinTone, weight } = validatedFields.data;
+  const { gender, age, stylePreferences, skinTone, weight, height } = validatedFields.data;
 
   try {
     await pool.query(
-      'UPDATE users SET gender = ?, age = ?, style_preferences = ?, skin_tone = ?, weight = ? WHERE id = ?',
+      'UPDATE users SET gender = ?, age = ?, style_preferences = ?, skin_tone = ?, weight = ?, height = ? WHERE id = ?',
       [
         gender || null, 
         age === undefined ? null : age, 
         JSON.stringify(stylePreferences || []), 
         skinTone || null,
         weight === undefined ? null : weight,
+        height === undefined ? null : height, // 新增
         user.id
       ]
     );
@@ -208,10 +211,11 @@ export async function updateUserProfile(
       session.user.style_preferences = stylePreferences || [];
       session.user.skinTone = skinTone || null;
       session.user.weight = weight === undefined ? null : weight;
+      session.user.height = height === undefined ? null : height; // 新增
       await session.save();
     }
     
-    const [updatedUserRows] = await pool.query<RowDataPacket[]>('SELECT id, username, gender, age, style_preferences, skin_tone, weight, oobe_completed FROM users WHERE id = ?', [user.id]);
+    const [updatedUserRows] = await pool.query<RowDataPacket[]>('SELECT id, username, gender, age, style_preferences, skin_tone, weight, height, oobe_completed FROM users WHERE id = ?', [user.id]);
     const updatedUser = updatedUserRows[0] as User | undefined;
 
     return { success: true, message: '个人信息已成功更新！', user: updatedUser };
@@ -242,3 +246,4 @@ export async function markOobeAsCompleted(): Promise<{ success: boolean; message
     return { success: false, message: '更新OOBE状态失败。' };
   }
 }
+

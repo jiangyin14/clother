@@ -46,7 +46,7 @@ export default function OobePage() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [skinToneValue, setSkinToneValue] = useState<string>('');
   const [weightValue, setWeightValue] = useState<string>('');
-
+  const [heightValue, setHeightValue] = useState<string>(''); // 新增
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
   const [state, dispatch] = useActionState(updateUserProfile, initialState);
@@ -91,6 +91,10 @@ export default function OobePage() {
 
   const handleWeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWeightValue(event.target.value);
+  };
+
+  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => { // 新增
+    setHeightValue(event.target.value);
   };
 
   return (
@@ -142,6 +146,19 @@ export default function OobePage() {
             />
             {state?.errors?.weight && <p className="text-sm text-destructive">{state.errors.weight.join(', ')}</p>}
           </div>
+           <div className="space-y-2"> {/* 新增身高字段 */}
+            <Label htmlFor="height">身高 (cm)</Label>
+            <Input
+              id="height"
+              name="height"
+              type="number"
+              placeholder="请输入您的身高 (单位: 厘米)"
+              value={heightValue}
+              onChange={handleHeightChange}
+              min="50" 
+            />
+            {state?.errors?.height && <p className="text-sm text-destructive">{state.errors.height.join(', ')}</p>}
+          </div>
           <StylePreferencesInput
             selectedPreferences={selectedStyles}
             onPreferenceChange={handleStylePreferenceChange}
@@ -159,3 +176,4 @@ export default function OobePage() {
     </>
   );
 }
+
