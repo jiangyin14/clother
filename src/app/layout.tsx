@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 // import { Geist, Geist_Mono } from 'next/font/google'; // Comment out or remove this line
 import localFont from 'next/font/local'; // Import localFont
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
+// import { Toaster } from "@/components/ui/toaster"; // Remove direct import of Toaster
 import {
   SidebarProvider,
   Sidebar,
@@ -23,7 +23,7 @@ import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
 import { buttonVariants } from '@/components/ui/button';
-import ClientSideToaster from '@/components/ClientSideToaster';
+import ClientSideToaster from '@/components/ClientSideToaster'; // Import the new wrapper
 
 
 // Add local font definitions
@@ -190,7 +190,7 @@ export default async function RootLayout({
             </footer>
           </SidebarInset>
         </SidebarProvider>
-        <ClientSideToaster />
+        <ClientSideToaster /> {/* Use the client-side wrapper here */}
       </body>
     </html>
   );
