@@ -23,7 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" className="w-full text-base" disabled={pending} size="lg">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -46,13 +46,12 @@ export default function ProfilePage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // Form states
   const [ageValue, setAgeValue] = useState<string>('');
   const [selectedGender, setSelectedGender] = useState<string | undefined>(undefined);
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [skinToneValue, setSkinToneValue] = useState<string>('');
   const [weightValue, setWeightValue] = useState<string>('');
-  const [heightValue, setHeightValue] = useState<string>(''); // 新增
+  const [heightValue, setHeightValue] = useState<string>('');
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
   const [state, dispatch] = useActionState(updateUserProfile, initialState);
@@ -69,7 +68,7 @@ export default function ProfilePage() {
           setSelectedStyles(user.style_preferences || []);
           setSkinToneValue(user.skinTone || '');
           setWeightValue(user.weight?.toString() || '');
-          setHeightValue(user.height?.toString() || ''); // 新增
+          setHeightValue(user.height?.toString() || '');
         } else {
           router.push('/login'); 
         }
@@ -93,7 +92,7 @@ export default function ProfilePage() {
         setSelectedStyles(state.user.style_preferences || []);
         setSkinToneValue(state.user.skinTone || '');
         setWeightValue(state.user.weight?.toString() || '');
-        setHeightValue(state.user.height?.toString() || ''); // 新增
+        setHeightValue(state.user.height?.toString() || '');
       }
        router.refresh(); 
     } else if (!state.success && state.message) {
@@ -119,7 +118,7 @@ export default function ProfilePage() {
     setWeightValue(event.target.value);
   };
 
-  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => { // 新增
+  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHeightValue(event.target.value);
   };
 
@@ -127,17 +126,17 @@ export default function ProfilePage() {
     return (
       <>
         <CardHeader>
-          <CardTitle className="flex items-center text-2xl">
+          <CardTitle className="flex items-center text-xl sm:text-2xl">
             <UserCircle className="mr-3 h-7 w-7 text-primary" /> 用户中心
           </CardTitle>
-          <CardDescription>管理您的个人信息和偏好设置。</CardDescription>
+          <CardDescription className="text-sm sm:text-base text-muted-foreground">管理您的个人信息和偏好设置。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 p-6">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" /> {/* For Height */}
+          <Skeleton className="h-10 w-full" /> 
           <Label>穿衣偏好</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
             {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
@@ -165,11 +164,11 @@ export default function ProfilePage() {
   return (
     <>
       <CardHeader>
-        <CardTitle className="flex items-center text-2xl font-bold">
+        <CardTitle className="flex items-center text-xl sm:text-2xl font-bold">
           <UserCircle className="mr-3 h-8 w-8 text-primary" />
           用户中心
         </CardTitle>
-        <CardDescription>查看和更新您的个人信息与穿衣偏好。当前用户: {currentUser.username}</CardDescription>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">查看和更新您的个人信息与穿衣偏好。当前用户: {currentUser.username}</CardDescription>
       </CardHeader>
       <form action={dispatch}>
         <CardContent className="space-y-8 p-6">
@@ -214,7 +213,7 @@ export default function ProfilePage() {
             />
             {state?.errors?.weight && <p className="text-sm text-destructive">{state.errors.weight.join(', ')}</p>}
           </div>
-          <div className="space-y-2"> {/* 新增身高字段 */}
+          <div className="space-y-2">
             <Label htmlFor="height">身高 (cm)</Label>
             <Input
               id="height"
@@ -243,4 +242,3 @@ export default function ProfilePage() {
     </>
   );
 }
-

@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ChangeEvent } from 'react';
@@ -82,7 +83,6 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
         title: '属性已识别！',
         description: `找到属性: ${attributeResult.attributes.join('、') || '无'}`,
       });
-      // Reset form
       setImagePreview(null);
       setImageDataUri(null);
       setFileName('');
@@ -103,10 +103,10 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
+        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
           <UploadCloud className="text-primary" /> 添加新衣物
         </CardTitle>
-        <CardDescription>上传你的衣物图片以分析其属性。</CardDescription>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">上传你的衣物图片以分析其属性。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -126,7 +126,7 @@ const ClothingUploadForm: React.FC<ClothingUploadFormProps> = ({ onClothingAnaly
           </div>
         )}
 
-        <Button onClick={handleSubmit} disabled={isLoading || !imageDataUri} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+        <Button onClick={handleSubmit} disabled={isLoading || !imageDataUri} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground text-base" size="lg">
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

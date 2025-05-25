@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" className="w-full text-base" disabled={pending} size="lg">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -46,7 +46,7 @@ export default function OobePage() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [skinToneValue, setSkinToneValue] = useState<string>('');
   const [weightValue, setWeightValue] = useState<string>('');
-  const [heightValue, setHeightValue] = useState<string>(''); // 新增
+  const [heightValue, setHeightValue] = useState<string>('');
 
   const initialState: ProfileFormState = { message: undefined, errors: {}, success: false };
   const [state, dispatch] = useActionState(updateUserProfile, initialState);
@@ -93,7 +93,7 @@ export default function OobePage() {
     setWeightValue(event.target.value);
   };
 
-  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => { // 新增
+  const handleHeightChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setHeightValue(event.target.value);
   };
 
@@ -101,7 +101,7 @@ export default function OobePage() {
     <>
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">欢迎来到 Clother (衣者)！</CardTitle>
-        <CardDescription>为了给您更好的个性化体验，请花几分钟完成以下初始设置。</CardDescription>
+        <CardDescription className="text-base sm:text-lg text-muted-foreground">为了给您更好的个性化体验，请花几分钟完成以下初始设置。</CardDescription>
       </CardHeader>
       <form action={dispatch}>
         <CardContent className="space-y-6 p-6">
@@ -146,7 +146,7 @@ export default function OobePage() {
             />
             {state?.errors?.weight && <p className="text-sm text-destructive">{state.errors.weight.join(', ')}</p>}
           </div>
-           <div className="space-y-2"> {/* 新增身高字段 */}
+           <div className="space-y-2">
             <Label htmlFor="height">身高 (cm)</Label>
             <Input
               id="height"
@@ -176,4 +176,3 @@ export default function OobePage() {
     </>
   );
 }
-

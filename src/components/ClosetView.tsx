@@ -10,7 +10,7 @@ import { Archive, Loader2, PlusCircle } from 'lucide-react';
 
 interface ClosetViewProps {
   myClosetItems: ClothingItem[];
-  defaultClothingItems: ClothingItem[]; // For non-logged in users or as examples
+  defaultClothingItems: ClothingItem[]; 
   onAddDefaultClothing: (item: ClothingItem) => void;
   onRemoveMyClothing: (id: string) => void;
   isLoading: boolean;
@@ -33,10 +33,10 @@ const ClosetView: React.FC<ClosetViewProps> = ({
       {showMyCloset && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
               <Archive className="text-primary" /> 我的衣橱 {isLoggedIn ? "(已同步)" : "(本地)"}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm sm:text-base text-muted-foreground">
               {isLoggedIn 
                 ? "这是您已保存的衣物。它们将用于推荐。" 
                 : "这是您本地添加的衣物。登录后可同步到云端。"}
@@ -44,12 +44,12 @@ const ClosetView: React.FC<ClosetViewProps> = ({
           </CardHeader>
           <CardContent>
             {isLoading && myClosetItems.length === 0 ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <div className="flex items-center justify-center py-8 text-muted-foreground text-sm sm:text-base">
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 正在加载您的衣橱...
               </div>
             ) : myClosetItems.length === 0 ? (
-              <p className="text-muted-foreground italic text-center py-8">
+              <p className="text-muted-foreground italic text-center py-8 text-sm sm:text-base">
                 您的衣橱是空的。上传一些衣物，或从下方推荐中添加吧！
               </p>
             ) : (
@@ -66,10 +66,10 @@ const ClosetView: React.FC<ClosetViewProps> = ({
       {showDefaultItemsSection && (
          <Card className="shadow-lg border-dashed">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
               <PlusCircle className="text-primary" /> 快速添加示例衣物
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm sm:text-base text-muted-foreground">
               这些是推荐的示例衣物，您可以将它们添加到您的本地衣橱中开始体验。
             </CardDescription>
           </CardHeader>
@@ -89,7 +89,7 @@ const ClosetView: React.FC<ClosetViewProps> = ({
       )}
        {!showMyCloset && !showDefaultItemsSection && !isLoading && (
          <Card className="border-dashed">
-            <CardContent className="pt-6 text-center text-muted-foreground">
+            <CardContent className="pt-6 text-center text-muted-foreground text-sm sm:text-base">
                 <Archive className="mx-auto h-10 w-10 mb-2" />
                 <p>您的衣橱是空的。上传新衣物或登录以查看已保存的衣物。</p>
             </CardContent>

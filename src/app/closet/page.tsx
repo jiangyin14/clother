@@ -37,7 +37,7 @@ export default function ClosetPage() {
         setMyClosetItems(items);
       } else {
         setIsLoggedIn(false);
-        setMyClosetItems([]); // Non-logged-in users start with an empty local closet for this page
+        setMyClosetItems([]); 
       }
     } catch (error) {
       toast({
@@ -75,9 +75,6 @@ export default function ClosetPage() {
         toast({ title: "已添加衣物", description: `${result.name} 已保存到您的在线衣橱。` });
       }
     } else {
-      // For non-logged-in users, manage items locally if desired, or prompt to log in
-      // For this iteration, we'll just show a toast and not add to a "local" closet on this page
-      // as the primary closet management is for logged-in users.
       setMyClosetItems((prevItems) => [...prevItems, newItemForState]);
       toast({ title: "衣物已分析 (未登录)", description: `${newItemForState.name} 已添加到本地临时列表。登录后才能永久保存。` });
     }
@@ -86,7 +83,6 @@ export default function ClosetPage() {
   const handleAddDefaultClothing = (itemToAdd: ClothingItem) => {
     if (!myClosetItems.find(item => item.id === itemToAdd.id)) {
       if (isLoggedIn) {
-        // Create a copy for the user's database, not the default item itself
         const itemToSaveToDb = { ...itemToAdd, id: `user-copy-${itemToAdd.id}-${Date.now()}`, isDefault: false };
         addClothingItem(itemToSaveToDb).then(res => {
           if ('error' in res) {
@@ -115,7 +111,6 @@ export default function ClosetPage() {
         toast({ title: "移除失败", description: result.error || "无法移除物品。", variant: "destructive" });
       }
     } else {
-      // Non-logged in users removing from their temporary local list
       setMyClosetItems((prevItems) => prevItems.filter((item) => item.id !== idToRemove));
       toast({ title: "已移除物品", description: "该物品已从本地临时列表中移除。" });
     }
@@ -133,11 +128,11 @@ export default function ClosetPage() {
   return (
     <div className="container mx-auto font-sans">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl flex items-center justify-center">
-          <Shirt className="inline-block h-10 w-10 mr-3 text-primary" />
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl lg:text-5xl flex items-center justify-center">
+          <Shirt className="inline-block h-8 w-8 md:h-10 md:w-10 mr-3 text-primary" />
           我的衣橱
         </h1>
-        <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
+        <p className="text-base md:text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
           在这里管理您的所有衣物。上传新衣物，查看和整理您的个人时尚收藏。
         </p>
       </header>
@@ -151,7 +146,7 @@ export default function ClosetPage() {
         <div className="lg:col-span-2">
           <ClosetView
             myClosetItems={myClosetItems}
-            defaultClothingItems={DEFAULT_CLOTHING_ITEMS} // Always show defaults as an option to add
+            defaultClothingItems={DEFAULT_CLOTHING_ITEMS}
             onAddDefaultClothing={handleAddDefaultClothing}
             onRemoveMyClothing={handleRemoveMyClothing}
             isLoading={isLoadingCloset}

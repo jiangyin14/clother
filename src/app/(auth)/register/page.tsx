@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -10,12 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UserPlus } from 'lucide-react';
-import CaptchaWidget from '@/components/CaptchaWidget'; // Updated import
+import CaptchaWidget from '@/components/CaptchaWidget';
 
 function RegisterButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" className="w-full" aria-disabled={pending || disabled} disabled={pending || disabled}>
+    <Button type="submit" className="w-full text-base" aria-disabled={pending || disabled} disabled={pending || disabled} size="lg">
       {pending ? '注册中...' : '注册'}
     </Button>
   );
@@ -24,13 +25,12 @@ function RegisterButton({ disabled }: { disabled?: boolean }) {
 export default function RegisterPage() {
   const [state, dispatch] = useActionState(register, undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0); // New state
+  const [captchaResetTrigger, setCaptchaResetTrigger] = useState(0);
 
-  // Effect to reset CAPTCHA when form state changes (e.g., after submission)
   useEffect(() => {
-    if (state) { // Check if state is not undefined (meaning a submission attempt happened)
-      setCaptchaToken(null); // Clear previous token
-      setCaptchaResetTrigger(prev => prev + 1); // Trigger CAPTCHA reset
+    if (state) { 
+      setCaptchaToken(null); 
+      setCaptchaResetTrigger(prev => prev + 1); 
     }
   }, [state]);
 
@@ -41,7 +41,7 @@ export default function RegisterPage() {
             <UserPlus className="h-12 w-12 text-primary" />
         </div>
         <CardTitle className="text-2xl">创建您的账户</CardTitle>
-        <CardDescription>加入 Clother (衣者)，开启您的智能时尚之旅！</CardDescription>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">加入 Clother (衣者)，开启您的智能时尚之旅！</CardDescription>
       </CardHeader>
       <form action={dispatch}>
         <CardContent className="space-y-4">
@@ -71,7 +71,7 @@ export default function RegisterPage() {
             <CaptchaWidget
               onTokenChange={setCaptchaToken}
               className="mx-auto"
-              resetTrigger={captchaResetTrigger} // Pass the trigger
+              resetTrigger={captchaResetTrigger}
             />
             <input type="hidden" name="captchaToken" value={captchaToken || ''} />
             {state?.errors?.captchaToken && <p className="text-sm text-destructive">{state.errors.captchaToken.join(', ')}</p>}
@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <RegisterButton disabled={!captchaToken} /> {/* Updated disabled condition */}
+          <RegisterButton disabled={!captchaToken} />
            <p className="text-center text-sm text-muted-foreground">
             已经有账户了？{' '}
             <Link href="/login" className="font-medium text-primary hover:underline">

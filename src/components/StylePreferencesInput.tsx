@@ -20,7 +20,7 @@ const StylePreferencesInput: React.FC<StylePreferencesInputProps> = ({
 }) => {
   return (
     <div className="space-y-2">
-      <Label>穿衣偏好 (可多选)</Label>
+      <Label className="text-sm font-medium">穿衣偏好 (可多选)</Label>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
         {STYLE_PREFERENCES_OPTIONS.map((option: StylePreferenceOption) => (
           <div key={option.id} className="flex items-center space-x-2">
@@ -32,7 +32,7 @@ const StylePreferencesInput: React.FC<StylePreferencesInputProps> = ({
               onCheckedChange={(checked) => onPreferenceChange(option.id, !!checked)}
               disabled={disabled}
             />
-            <Label htmlFor={`style-${option.id}`} className="font-normal cursor-pointer">
+            <Label htmlFor={`style-${option.id}`} className="font-normal cursor-pointer text-sm sm:text-base">
               {option.label}
             </Label>
           </div>

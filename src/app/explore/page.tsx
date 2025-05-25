@@ -42,16 +42,16 @@ export default function ExplorePage() {
   const fetchExplorableItems = useCallback(async () => {
     setIsLoadingExplorable(true);
     try {
-      const items = await handleGenerateExplorableItemsAction(12); // Generate 12 items
+      const items = await handleGenerateExplorableItemsAction(12);
       setExplorableItems(items);
-      setSelectedItems([]); // Clear previous selections when fetching new items
+      setSelectedItems([]); 
     } catch (error) {
       toast({
         title: "获取探索元素失败",
         description: error instanceof Error ? error.message : "无法连接到服务器获取探索灵感。",
         variant: "destructive",
       });
-      setExplorableItems([]); // Set to empty array on error
+      setExplorableItems([]);
     } finally {
       setIsLoadingExplorable(false);
     }
@@ -140,11 +140,11 @@ export default function ExplorePage() {
   return (
     <div className="container mx-auto font-sans">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl flex items-center justify-center">
-          <Search className="inline-block h-10 w-10 mr-3 text-primary" />
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl lg:text-5xl flex items-center justify-center">
+          <Search className="inline-block h-8 w-8 md:h-10 md:w-10 mr-3 text-primary" />
           探索新风格
         </h1>
-        <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
+        <p className="text-base md:text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
           选择AI为你生成的时尚灵感，结合你的心情、天气和创意偏好，打造全新搭配并生成效果图。
         </p>
       </header>
@@ -157,15 +157,15 @@ export default function ExplorePage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-xl">1. 选择探索灵感</CardTitle>
-                  <CardDescription>勾选你想要尝试的时尚元素，激发AI的创意火花。</CardDescription>
+                  <CardTitle className="text-lg md:text-xl">1. 选择探索灵感</CardTitle>
+                  <CardDescription className="text-sm md:text-base text-muted-foreground">勾选你想要尝试的时尚元素，激发AI的创意火花。</CardDescription>
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={fetchExplorableItems} 
                   disabled={isLoadingExplorable}
-                  className="rounded-lg"
+                  className="rounded-lg text-sm"
                 >
                   {isLoadingExplorable ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
                   换一批灵感
@@ -203,15 +203,15 @@ export default function ExplorePage() {
                             {isSelected && <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0 text-xs text-muted-foreground flex-grow">
+                        <CardContent className="p-3 pt-0 text-sm text-muted-foreground flex-grow">
                           <p className="line-clamp-3">{item.description}</p>
                         </CardContent>
                         <CardFooter className="p-3 pt-2 mt-auto border-t">
                            <Button 
                               variant={isSelected ? "default" : "outline"} 
                               size="sm" 
-                              className="w-full text-xs rounded-md"
-                              onClick={(e) => { e.stopPropagation(); handleItemSelection(item); }} // Prevent card click if button is clicked
+                              className="w-full text-sm rounded-md"
+                              onClick={(e) => { e.stopPropagation(); handleItemSelection(item); }}
                             >
                               {isSelected ? <><ThumbsUp className="mr-1.5 h-3.5 w-3.5"/>已选择</> : '选择此项'}
                             </Button>
@@ -221,7 +221,7 @@ export default function ExplorePage() {
                   })}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-8">未能加载探索元素，请稍后重试或点击“换一批灵感”。</p>
+                <p className="text-center text-muted-foreground py-8 text-sm sm:text-base">未能加载探索元素，请稍后重试或点击“换一批灵感”。</p>
               )}
             </CardContent>
           </Card>
@@ -245,13 +245,13 @@ export default function ExplorePage() {
                     
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-xl">生成搭配</CardTitle> 
+              <CardTitle className="text-lg md:text-xl">生成搭配</CardTitle> 
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
                 onClick={() => generateNewOutfit(false)}
                 disabled={isLoadingRecommendation || isLoadingImage || !canSubmit}
-                className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg"
+                className="w-full py-3 text-base md:text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg"
                 size="lg"
               >
                 {isLoadingRecommendation ? (
@@ -271,7 +271,7 @@ export default function ExplorePage() {
                   onClick={() => generateNewOutfit(true)}
                   disabled={isLoadingRecommendation || isLoadingImage || !canSubmit}
                   variant="outline"
-                  className="w-full rounded-lg"
+                  className="w-full rounded-lg text-base md:text-lg"
                   size="lg"
                 >
                   {isLoadingRecommendation || isLoadingImage ? (
@@ -290,10 +290,10 @@ export default function ExplorePage() {
               {outfitRecommendation && (
                 <Card className="shadow-lg rounded-xl">
                   <CardHeader>
-                    <CardTitle className="flex items-center"><Sparkles className="mr-2 h-5 w-5 text-primary" /> AI搭配建议</CardTitle>
+                    <CardTitle className="flex items-center text-lg md:text-xl"><Sparkles className="mr-2 h-5 w-5 text-primary" /> AI搭配建议</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{outfitRecommendation}</p>
+                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{outfitRecommendation}</p>
                   </CardContent>
                 </Card>
               )}
@@ -301,7 +301,7 @@ export default function ExplorePage() {
               {(isLoadingImage || generatedImageUrl) && (
                 <Card className="shadow-lg rounded-xl">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
+                    <CardTitle className="flex items-center text-lg md:text-xl">
                       <ImageIcon className="mr-2 h-5 w-5 text-primary" /> AI效果图
                     </CardTitle>
                   </CardHeader>
@@ -327,8 +327,8 @@ export default function ExplorePage() {
              <Card className="border-dashed border-primary/30 rounded-xl bg-primary/5">
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12 mb-3 text-primary/70" />
-                <p className="font-semibold">准备好探索你的新造型了吗？</p>
-                <p className="text-sm">从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
+                <p className="font-semibold text-lg">准备好探索你的新造型了吗？</p>
+                <p className="text-sm sm:text-base">从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
               </CardContent>
             </Card>
           )}

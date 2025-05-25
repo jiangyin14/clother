@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -22,37 +23,17 @@ interface MoodWeatherInputProps {
   moodOptions: MoodOption[];
 }
 
-// WMO Weather interpretation codes mapping to Chinese descriptions
-// Reference: https://open-meteo.com/en/docs (Weather WMO Codes section)
 const weatherCodeMap: Record<number, string> = {
-  0: '晴朗',
-  1: '基本晴朗',
-  2: '局部多云',
-  3: '阴天',
-  45: '雾',
-  48: '冻雾',
-  51: '小毛毛雨',
-  53: '中等毛毛雨',
-  55: '大毛毛雨',
-  56: '小冻毛毛雨',
-  57: '大冻毛毛雨',
-  61: '小雨',
-  63: '中雨',
-  65: '大雨',
-  66: '小冻雨',
-  67: '大冻雨',
-  71: '小雪',
-  73: '中雪',
-  75: '大雪',
-  77: '米雪',
-  80: '小阵雨',
-  81: '中阵雨',
-  82: '大阵雨',
-  85: '小阵雪',
-  86: '大阵雪',
-  95: '雷暴',
-  96: '雷暴伴有小冰雹',
-  99: '雷暴伴有大冰雹',
+  0: '晴朗', 1: '基本晴朗', 2: '局部多云', 3: '阴天',
+  45: '雾', 48: '冻雾',
+  51: '小毛毛雨', 53: '中等毛毛雨', 55: '大毛毛雨',
+  56: '小冻毛毛雨', 57: '大冻毛毛雨',
+  61: '小雨', 63: '中雨', 65: '大雨',
+  66: '小冻雨', 67: '大冻雨',
+  71: '小雪', 73: '中雪', 75: '大雪', 77: '米雪',
+  80: '小阵雨', 81: '中阵雨', 82: '大阵雨',
+  85: '小阵雪', 86: '大阵雪',
+  95: '雷暴', 96: '雷暴伴有小冰雹', 99: '雷暴伴有大冰雹',
 };
 
 function getWeatherDescription(code: number, temp?: number, tempMin?: number, tempMax?: number): string {
@@ -99,7 +80,6 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
     if (isToday(date)) {
       weatherApiUrl = `${baseApiUrl}?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
     } else {
-      // For past or future dates (Open-Meteo allows up to 16 days forecast, and historical for past)
       weatherApiUrl = `${baseApiUrl}?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${formattedDate}&end_date=${formattedDate}`;
     }
     
@@ -150,7 +130,7 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
         setLatitude(lat);
         setLongitude(lon);
         const today = new Date();
-        setSelectedDate(today); // Reset date to today for current weather
+        setSelectedDate(today); 
         fetchWeather(lat, lon, today);
       },
       (error) => {
@@ -177,29 +157,25 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
         fetchWeather(latitude, longitude, date);
       } else {
         toast({ title: "请先获取当前位置", description: "需要位置信息才能查询指定日期的天气。", variant: "default" });
-        // Optionally, trigger handleGetCurrentLocationWeather() or prompt user
       }
     }
   };
 
-  // Attempt to get location on mount if not already set
   useEffect(() => {
-    if (!latitude && !longitude && !locationError) { // Only if no prior attempt or error
-       // handleGetCurrentLocationWeather(); // You can choose to auto-fetch on mount or not
-    }
+    // Removed auto-fetch on mount to let user initiate
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array to run once on mount
+  }, []);
 
 
   return (
     <Card className="shadow-lg rounded-xl">
       <CardHeader>
-        <CardTitle className="text-xl">设置您的场景</CardTitle>
-        <CardDescription>选择心情，自动获取或手动设定天气以获得最佳服装推荐。</CardDescription>
+        <CardTitle className="text-lg md:text-xl">设置您的场景</CardTitle>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">选择心情，自动获取或手动设定天气以获得最佳服装推荐。</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label className="font-medium">你当前的心情</Label>
+          <Label className="font-medium text-sm">你当前的心情</Label>
           <div className="flex flex-wrap gap-2 pt-1">
             {moodOptions.map((option) => (
               <Button
@@ -207,18 +183,18 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
                 variant={selectedMoods.includes(option.value) ? 'default' : 'outline'}
                 onClick={() => handleMoodButtonClick(option.value)}
                 size="sm"
-                className="capitalize rounded-full px-3 py-1.5 text-xs sm:text-sm"
+                className="capitalize rounded-full px-3 py-1.5 text-sm"
               >
                 {option.icon && React.createElement(option.icon, { size: 16, className: "mr-1.5 flex-shrink-0" })}
                 {option.label}
               </Button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">选择一个或多个描述你心情的关键词。</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">选择一个或多个描述你心情的关键词。</p>
         </div>
 
         <div className="space-y-3">
-          <Label className="font-medium flex items-center gap-2">
+          <Label className="font-medium flex items-center gap-2 text-sm">
             <Cloud size={18} className="text-primary" />
             天气信息
           </Label>
@@ -226,10 +202,10 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
           <Button 
             onClick={handleGetCurrentLocationWeather} 
             variant="outline" 
-            className="w-full rounded-md"
+            className="w-full rounded-md text-sm"
             disabled={isLoadingWeather}
           >
-            {isLoadingWeather && latitude === null ? ( // Loading initial location
+            {isLoadingWeather && latitude === null ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <LocateFixed className="mr-2 h-4 w-4" />
@@ -248,7 +224,7 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
-                  className="w-full justify-start text-left font-normal rounded-md"
+                  className="w-full justify-start text-left font-normal rounded-md text-sm"
                   disabled={!latitude || !longitude || isLoadingWeather}
                 >
                   <CalendarDays className="mr-2 h-4 w-4" />
@@ -262,20 +238,20 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
                   onSelect={handleDateSelect}
                   initialFocus
                   locale={zhCN}
-                  disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 90)) || date > new Date(new Date().setDate(new Date().getDate() + 15))} // Example: 90 days past, 15 days future
+                  disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 90)) || date > new Date(new Date().setDate(new Date().getDate() + 15))}
                 />
               </PopoverContent>
             </Popover>
-             {isLoadingWeather && latitude !== null && ( // Loading weather for a selected date
+             {isLoadingWeather && latitude !== null && ( 
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
             )}
           </div>
-           <p className="text-xs text-muted-foreground">
+           <p className="text-xs sm:text-sm text-muted-foreground">
             {latitude && longitude ? `当前位置：纬度 ${latitude.toFixed(2)}, 经度 ${longitude.toFixed(2)}` : '自动获取天气需位置权限。'}
           </p>
-          <p className="text-xs text-muted-foreground">或者，您可以手动选择一个天气状况进行模拟：</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">或者，您可以手动选择一个天气状况进行模拟：</p>
           <Select value={selectedWeather} onValueChange={onWeatherChange} disabled={isLoadingWeather}>
-            <SelectTrigger id="weather-select" className="w-full rounded-md">
+            <SelectTrigger id="weather-select" className="w-full rounded-md text-sm">
               <SelectValue placeholder="手动选择天气状况" />
             </SelectTrigger>
             <SelectContent>
@@ -296,4 +272,3 @@ const MoodWeatherInput: React.FC<MoodWeatherInputProps> = ({
 };
 
 export default MoodWeatherInput;
-

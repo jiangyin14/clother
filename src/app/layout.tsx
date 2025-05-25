@@ -16,12 +16,12 @@ import {
 } from '@/components/ui/sidebar';
 import AppLogo from '@/components/AppLogo';
 import Link from 'next/link';
-import { Home, Compass, PanelLeft, UserCircle, Shirt } from 'lucide-react'; 
+import { Home, Compass, PanelLeft, Shirt } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 import React from 'react';
 import AuthNav from '@/components/AuthNav';
 import { getUserFromSession } from '@/actions/userActions';
-import { buttonVariants } from '@/components/ui/button'; // For SidebarTrigger styling
+import { buttonVariants } from '@/components/ui/button';
 
 // Add local font definitions
 const geistSans = localFont({
@@ -96,8 +96,8 @@ export default async function RootLayout({
             <SidebarHeader className="p-4 border-b border-sidebar-border">
               <AppLogo />
             </SidebarHeader>
-            <SidebarContent className="flex flex-col flex-grow p-2"> {/* Use flex-col and allow content to grow */}
-              <SidebarMenu className="flex flex-col flex-grow h-full gap-2"> {/* Use flex-col, full height, and allow menu to grow */}
+            <SidebarContent className="flex flex-col flex-grow p-2">
+              <SidebarMenu className="flex flex-col flex-grow h-full gap-2">
                 
                 <SidebarMenuItem className="flex flex-grow">
                   <SidebarMenuButton 
@@ -106,8 +106,8 @@ export default async function RootLayout({
                     className="h-full w-full flex flex-col items-center justify-center p-3 text-center border rounded-lg shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg transition-all duration-150 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:px-0"
                   >
                     <Home size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
-                    <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">推荐</span>
-                    <span className="text-xs text-muted-foreground mt-0.5 group-data-[collapsible=icon]:hidden px-1 leading-tight">
+                    <span className="font-medium text-base group-data-[collapsible=icon]:hidden">推荐</span>
+                    <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
                       获取智能搭配建议，点亮您的每一天。
                     </span>
                   </SidebarMenuButton>
@@ -120,8 +120,8 @@ export default async function RootLayout({
                     className="h-full w-full flex flex-col items-center justify-center p-3 text-center border rounded-lg shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg transition-all duration-150 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:px-0"
                   >
                      <Shirt size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" /> 
-                     <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">衣橱</span>
-                     <span className="text-xs text-muted-foreground mt-0.5 group-data-[collapsible=icon]:hidden px-1 leading-tight">
+                     <span className="font-medium text-base group-data-[collapsible=icon]:hidden">衣橱</span>
+                     <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
                       轻松管理您的所有衣物，时尚尽在掌握。
                     </span>
                   </SidebarMenuButton>
@@ -134,8 +134,8 @@ export default async function RootLayout({
                     className="h-full w-full flex flex-col items-center justify-center p-3 text-center border rounded-lg shadow-sm hover:shadow-md focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg transition-all duration-150 group-data-[collapsible=icon]:py-2 group-data-[collapsible=icon]:px-0"
                   >
                      <Compass size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
-                     <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">探索</span>
-                     <span className="text-xs text-muted-foreground mt-0.5 group-data-[collapsible=icon]:hidden px-1 leading-tight">
+                     <span className="font-medium text-base group-data-[collapsible=icon]:hidden">探索</span>
+                     <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
                       发现新潮流与风格，激发穿搭无限可能。
                     </span>
                   </SidebarMenuButton>
@@ -149,7 +149,6 @@ export default async function RootLayout({
           </Sidebar>
           <SidebarInset>
             <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6 md:hidden">
-              {/* Updated SidebarTrigger usage */}
               <SidebarTrigger 
                 variant="ghost" 
                 size="icon" 
@@ -166,7 +165,7 @@ export default async function RootLayout({
             <main className="flex-1 p-4 sm:p-6">
               {children}
             </main>
-             <footer className="w-full border-t border-border bg-background p-4 text-center text-xs text-muted-foreground">
+             <footer className="w-full border-t border-border bg-background p-4 text-center text-sm text-muted-foreground">
               <p>&copy; {new Date().getFullYear()} Clother (衣者). 由 AI 驱动.</p>
               <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                 皖ICP备2024050771号

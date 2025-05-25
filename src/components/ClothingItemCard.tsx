@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -30,7 +31,7 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
   return (
     <Card className="flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 h-full">
       <CardHeader className="p-4">
-        <CardTitle className="text-md truncate flex items-center gap-2">
+        <CardTitle className="text-base md:text-lg truncate flex items-center gap-2">
           <Shirt size={20} className="text-primary flex-shrink-0" />
           <span className="truncate" title={item.name}>{item.name}</span>
         </CardTitle>
@@ -47,30 +48,30 @@ const ClothingItemCard: React.FC<ClothingItemCardProps> = ({ item, onRemove, onA
           />
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground font-medium">属性：</p>
+          <p className="text-sm text-muted-foreground font-medium">属性：</p>
           <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
             {item.attributes.length > 0 ? (
               item.attributes.map((attr, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
+                <Badge key={index} variant="secondary" className="text-xs sm:text-sm">
                   {attr}
                 </Badge>
               ))
             ) : (
-              <p className="text-xs text-muted-foreground italic">未识别到属性。</p>
+              <p className="text-sm text-muted-foreground italic">未识别到属性。</p>
             )}
           </div>
         </div>
       </CardContent>
       <CardFooter className="p-4 border-t">
         {showAddButton && onAdd && (
-          <Button onClick={() => onAdd(item)} size="sm" className="w-full">
+          <Button onClick={() => onAdd(item)} size="sm" className="w-full text-sm">
             添加到我的衣橱
           </Button>
         )}
         {!showAddButton && onRemove && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" className="w-full text-destructive hover:bg-destructive/10 border-destructive/50 hover:text-destructive">
+              <Button variant="outline" size="sm" className="w-full text-destructive hover:bg-destructive/10 border-destructive/50 hover:text-destructive text-sm">
                 <Trash2 size={16} className="mr-2" />
                 移除
               </Button>

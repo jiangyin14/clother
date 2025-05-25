@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 
 import MoodWeatherInput from '@/components/MoodWeatherInput';
 import RecommendationDisplay from '@/components/RecommendationDisplay';
-import CreativitySlider from '@/components/CreativitySlider'; // 新增导入
+import CreativitySlider from '@/components/CreativitySlider';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles, Image as ImageIcon, Lightbulb } from 'lucide-react';
@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 export default function RecommendationPage() {
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedWeather, setSelectedWeather] = useState<string>('');
-  const [creativityLevel, setCreativityLevel] = useState<number>(5); // 新增状态
+  const [creativityLevel, setCreativityLevel] = useState<number>(5);
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [outfitImagePromptDetails, setOutfitImagePromptDetails] = useState<string | null>(null);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function RecommendationPage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
-      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, creativityLevel); // 传递creativityLevel
+      const result = await handleGetRecommendationAction(moodKeywordsString, selectedWeather, creativityLevel);
       
       if (result.error) {
         toast({ title: '获取推荐失败', description: result.error, variant: 'destructive' });
@@ -122,11 +122,11 @@ export default function RecommendationPage() {
   return (
     <div className="container mx-auto font-sans">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl flex items-center justify-center">
-          <Lightbulb className="inline-block h-10 w-10 mr-3 text-primary" />
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl lg:text-5xl flex items-center justify-center">
+          <Lightbulb className="inline-block h-8 w-8 md:h-10 md:w-10 mr-3 text-primary" />
           智能服装推荐
         </h1>
-        <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
+        <p className="text-base md:text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
           根据您的心情、天气和创意偏好，从您的衣橱（需登录）中获取个性化搭配建议和AI效果图。
         </p>
       </header>
@@ -143,7 +143,7 @@ export default function RecommendationPage() {
             weatherOptions={WEATHER_OPTIONS}
             moodOptions={MOOD_OPTIONS}
           />
-          <CreativitySlider // 新增滑块组件
+          <CreativitySlider
             value={creativityLevel}
             onValueChange={setCreativityLevel}
             disabled={isGettingRecommendation || isLoadingImage}
@@ -151,7 +151,7 @@ export default function RecommendationPage() {
           <Button
             onClick={handleGetRecommendation}
             disabled={!canGetRecommendation || isGettingRecommendation || isLoadingImage}
-            className="w-full py-3 text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-md"
+            className="w-full py-3 text-base md:text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-xl shadow-md"
             size="lg"
           >
             {isGettingRecommendation ? (
@@ -179,7 +179,7 @@ export default function RecommendationPage() {
           {(isLoadingImage || generatedImageUrl) && (
             <Card className={cn("shadow-lg rounded-xl", isLoadingImage ? "" : "animate-fadeIn")}>
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center text-lg md:text-xl">
                   <ImageIcon className="mr-2 h-5 w-5 text-primary" /> AI效果图
                 </CardTitle>
               </CardHeader>
@@ -202,8 +202,8 @@ export default function RecommendationPage() {
              <Card className="border-dashed border-primary/30 rounded-xl bg-primary/5">
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Sparkles className="mx-auto h-12 w-12 mb-3 text-primary/70" />
-                <p className="font-semibold">准备好获取您的专属搭配了吗？</p>
-                <p className="text-sm">
+                <p className="font-semibold text-lg">准备好获取您的专属搭配了吗？</p>
+                <p className="text-sm sm:text-base">
                   选择好心情、天气和创意偏好，AI 将从您的衣橱（需登录并添加衣物）中为您呈现惊喜！
                   {!isLoggedIn && " 请先登录以使用您的在线衣橱。"}
                 </p>

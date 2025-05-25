@@ -17,11 +17,11 @@ const CreativitySlider: React.FC<CreativitySliderProps> = ({ value, onValueChang
   return (
     <Card className="shadow-lg rounded-xl">
       <CardHeader>
-        <CardTitle className="text-xl flex items-center">
+        <CardTitle className="text-lg md:text-xl flex items-center">
           <WandSparkles className="mr-2 h-5 w-5 text-primary" />
           创意与开放程度
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">
           调整滑块来设定推荐的创意水平。1表示非常保守，10表示非常大胆和新颖。
         </CardDescription>
       </CardHeader>
@@ -42,7 +42,7 @@ const CreativitySlider: React.FC<CreativitySliderProps> = ({ value, onValueChang
             disabled={disabled}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
             <span>保守</span>
             <span>平衡</span>
             <span>大胆</span>
