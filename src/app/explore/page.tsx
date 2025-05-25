@@ -96,7 +96,7 @@ export default function ExplorePage() {
     }
 
     setIsLoadingRecommendation(true);
-    setIsLoadingImage(true);
+    setIsLoadingImage(true); // Start image loading along with recommendation
     if (!isRefresh) {
         setOutfitRecommendation(null);
         setGeneratedImageUrl(null);
@@ -109,12 +109,15 @@ export default function ExplorePage() {
     const moodKeywordsString = selectedMoods.join(', ');
 
     try {
+      // Get text recommendation and image prompt details
       const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, creativityLevel);
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
       const messageTitle = isRefresh ? "已为你“换”一批新的建议！" : "探索建议已生成！";
       toast({ title: messageTitle, description: "看看这个新搭配想法。" });
+      setIsLoadingRecommendation(false); // Text recommendation part is done
 
+      // Generate image based on prompt details
       if (result.imagePromptDetails) {
         const imageResult = await handleGenerateOutfitImageAction(result.imagePromptDetails);
         setGeneratedImageUrl(imageResult.imageDataUri);
@@ -129,9 +132,10 @@ export default function ExplorePage() {
         variant: 'destructive',
       });
        if (!isRefresh) setShowResults(false);
+       setIsLoadingRecommendation(false); // Ensure loading state is reset on error
     } finally {
-      setIsLoadingRecommendation(false);
-      setIsLoadingImage(false);
+      // setIsLoadingRecommendation(false); // Moved up
+      setIsLoadingImage(false); // Image generation attempt is complete
     }
   }, [selectedItems, selectedMoods, selectedWeather, creativityLevel, toast]);
 
@@ -193,6 +197,7 @@ export default function ExplorePage() {
       <Separator className="my-8" />
 
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-8">
+        {/* Left Column: Inspiration Selection & AI Image */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
@@ -215,7 +220,7 @@ export default function ExplorePage() {
             </CardHeader>
             <CardContent>
               {isLoadingExplorable ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4"> {/* Adjusted grid for larger screens */}
                   {[...Array(6)].map((_, i) => (
                     <Card key={i} className="h-[180px] flex flex-col justify-between p-4 rounded-lg">
                       <Skeleton className="h-5 w-3/4 mb-2" />
@@ -226,7 +231,7 @@ export default function ExplorePage() {
                   ))}
                 </div>
               ) : explorableItems.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4"> {/* Adjusted grid */}
                   {explorableItems.map(item => {
                     const isSelected = selectedItems.some(si => si.id === item.id);
                     return (
@@ -266,8 +271,49 @@ export default function ExplorePage() {
               )}
             </CardContent>
           </Card>
+
+          {/* AI效果图 Card (Moved here) */}
+          {showResults && (isLoadingImage || generatedImageUrl) && (
+            <Card className={cn("shadow-lg rounded-xl", isLoadingImage ? "" : "animate-fadeIn")}>
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg md:text-xl">
+                  <ImageIcon className="mr-2 h-5 w-5 text-primary" /> AI效果图
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex justify-center items-center min-h-[300px] sm:min-h-[400px] md:min-h-[500px] bg-muted/30 rounded-lg p-2"> {/* Increased min-height */}
+                {isLoadingImage && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
+                {generatedImageUrl && !isLoadingImage && (
+                  <Image
+                    src={generatedImageUrl}
+                    alt="AI 生成的服装效果图"
+                    width={500} // Adjusted width
+                    height={600} // Adjusted height to allow more vertical space
+                    className="rounded-md object-contain max-h-[400px] sm:max-h-[500px] md:max-h-[600px] shadow-md" // Responsive max-height
+                    data-ai-hint="fashion outfit"
+                  />
+                )}
+              </CardContent>
+              {canShare && (
+                <CardFooter className="p-4 border-t">
+                   <Button onClick={handleShare} disabled={isSharing} className="w-full text-base" variant="outline">
+                    {isSharing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
+                    {isSharing ? "分享中..." : "分享到穿搭广场"}
+                  </Button>
+                </CardFooter>
+              )}
+              {hasShared && (
+                <CardFooter className="p-4 border-t justify-center">
+                    <div className="flex items-center text-green-600">
+                        <CheckCircle2 className="mr-2 h-5 w-5" />
+                        <p className="text-sm font-medium">已成功分享！</p>
+                    </div>
+                </CardFooter>
+              )}
+            </Card>
+          )}
         </div>
 
+        {/* Right Column: Inputs & Text Recommendation (lg:col-span-3, sticky) */}
         <div className="lg:col-span-3 space-y-8 lg:sticky lg:top-8 self-start">
           <MoodWeatherInput
             selectedMoods={selectedMoods}
@@ -295,10 +341,10 @@ export default function ExplorePage() {
                 className="w-full py-3 text-base md:text-lg bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg"
                 size="lg"
               >
-                {isLoadingRecommendation ? (
+                {isLoadingRecommendation || isLoadingImage ? ( // Combined loading state for this button
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    生成搭配中...
+                    生成中...
                   </>
                 ) : (
                   <>
@@ -326,60 +372,33 @@ export default function ExplorePage() {
             </CardContent>
           </Card>
 
-          {showResults && (
-            <div className={cn("space-y-6", (isLoadingRecommendation || isLoadingImage) ? "" : "animate-fadeIn")}>
-              {outfitRecommendation && (
-                <Card className="shadow-lg rounded-xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg md:text-xl"><Sparkles className="mr-2 h-5 w-5 text-primary" /> AI搭配建议</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{outfitRecommendation}</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {(isLoadingImage || generatedImageUrl) && (
-                <Card className="shadow-lg rounded-xl">
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg md:text-xl">
-                      <ImageIcon className="mr-2 h-5 w-5 text-primary" /> AI效果图
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex justify-center items-center min-h-[250px] bg-muted/30 rounded-lg p-2">
-                    {isLoadingImage && <Loader2 className="h-10 w-10 animate-spin text-primary" />}
-                    {generatedImageUrl && !isLoadingImage && (
-                      <Image
-                        src={generatedImageUrl}
-                        alt="AI 生成的服装效果图"
-                        width={350}
-                        height={350}
-                        className="rounded-md object-contain max-h-[400px] shadow-md"
-                        data-ai-hint="fashion outfit"
-                      />
-                    )}
-                  </CardContent>
-                  {canShare && (
-                    <CardFooter className="p-4 border-t">
-                       <Button onClick={handleShare} disabled={isSharing} className="w-full text-base" variant="outline">
-                        {isSharing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
-                        {isSharing ? "分享中..." : "分享到穿搭广场"}
-                      </Button>
-                    </CardFooter>
-                  )}
-                  {hasShared && (
-                    <CardFooter className="p-4 border-t justify-center">
-                        <div className="flex items-center text-green-600">
-                            <CheckCircle2 className="mr-2 h-5 w-5" />
-                            <p className="text-sm font-medium">已成功分享！</p>
-                        </div>
-                    </CardFooter>
-                  )}
-                </Card>
-              )}
-            </div>
+          {/* AI搭配建议 Card (Text Recommendation) */}
+          {showResults && outfitRecommendation && !isLoadingRecommendation && ( // Only show when not loading recommendation
+            <Card className={cn("shadow-lg rounded-xl animate-fadeIn")}>
+              <CardHeader>
+                <CardTitle className="flex items-center text-lg md:text-xl"><Sparkles className="mr-2 h-5 w-5 text-primary" /> AI搭配建议</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">{outfitRecommendation}</p>
+              </CardContent>
+            </Card>
           )}
+          {/* Skeleton for text recommendation */}
+           {showResults && isLoadingRecommendation && (
+             <Card className="shadow-lg rounded-xl">
+               <CardHeader>
+                  <CardTitle className="flex items-center text-lg md:text-xl"><Sparkles className="mr-2 h-5 w-5 text-primary" /> AI搭配建议</CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+               </CardContent>
+             </Card>
+           )}
 
+
+          {/* Placeholder when nothing is shown yet */}
           {!showResults && !isLoadingExplorable && !isLoadingRecommendation && !isLoadingImage && explorableItems.length > 0 && (
              <Card className="border-dashed border-primary/30 rounded-xl bg-primary/5">
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
@@ -396,3 +415,4 @@ export default function ExplorePage() {
     </div>
   );
 }
+
