@@ -111,7 +111,7 @@ export default async function RootLayout({
                     <Home size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
                     <span className="font-medium text-base group-data-[collapsible=icon]:hidden">推荐</span>
                     <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
-                      获取智能搭配建议，点亮您的每一天。
+                      获取搭配建议，点亮您的每一天
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -125,7 +125,7 @@ export default async function RootLayout({
                      <Shirt size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
                      <span className="font-medium text-base group-data-[collapsible=icon]:hidden">衣橱</span>
                      <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
-                      轻松管理您的所有衣物，时尚尽在掌握。
+                      管理您的所有衣物，时尚尽在掌握
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -139,7 +139,7 @@ export default async function RootLayout({
                      <Compass size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
                      <span className="font-medium text-base group-data-[collapsible=icon]:hidden">探索</span>
                      <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
-                      发现新潮流与风格，激发穿搭无限可能。
+                      发现新潮流与风格，激发无限可能
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -153,7 +153,7 @@ export default async function RootLayout({
                      <GalleryHorizontal size={28} className="mb-1.5 group-data-[collapsible=icon]:mb-0 group-data-[collapsible=icon]:size-6 transition-all" />
                      <span className="font-medium text-base group-data-[collapsible=icon]:hidden">穿搭广场</span>
                      <span className="text-sm text-muted-foreground mt-1 group-data-[collapsible=icon]:hidden px-1 leading-relaxed">
-                      浏览和分享社区成员的时尚穿搭。
+                      浏览和分享社区成员的穿搭
                     </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
