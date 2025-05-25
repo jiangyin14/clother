@@ -17,7 +17,7 @@ export default pool;
 
 // Example DDL for tables (for reference, execute this in your MySQL client)
 /*
--- Users Table DDL (Updated for skin_tone, weight, and height)
+-- Users Table DDL
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS users (
     gender VARCHAR(30) NULL,
     age INT UNSIGNED NULL,
     style_preferences JSON NULL,
-    skin_tone VARCHAR(50) NULL,                 -- 肤色
-    weight INT UNSIGNED NULL,                   -- 体重 (kg)
-    height INT UNSIGNED NULL,                   -- 身高 (cm)
+    skin_tone VARCHAR(50) NULL,
+    weight INT UNSIGNED NULL,
+    height INT UNSIGNED NULL,
     oobe_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -44,13 +44,15 @@ CREATE TABLE IF NOT EXISTS clothing_items (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Shared Outfits Table DDL (New table for Showcase)
+-- Shared Outfits Table DDL (Updated for mood and weather)
 CREATE TABLE IF NOT EXISTS shared_outfits (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    username VARCHAR(255) NOT NULL,             -- Denormalized for easy display
-    user_gender VARCHAR(30) NULL,               -- Denormalized
-    user_age INT UNSIGNED NULL,                 -- Denormalized
+    username VARCHAR(255) NOT NULL,
+    user_gender VARCHAR(30) NULL,
+    user_age INT UNSIGNED NULL,
+    mood_keywords TEXT NULL,                    -- 心情关键词 (例如 "开心, 活力")
+    weather_information VARCHAR(255) NULL,      -- 天气信息 (例如 "晴朗温暖")
     outfit_description TEXT NOT NULL,
     image_data_uri LONGTEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -74,4 +76,11 @@ ADD COLUMN skin_tone VARCHAR(50) NULL AFTER style_preferences,
 ADD COLUMN weight INT UNSIGNED NULL AFTER skin_tone,
 ADD COLUMN height INT UNSIGNED NULL AFTER weight,
 ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER height;
+*/
+
+// To update an existing shared_outfits table (if it exists without mood/weather):
+/*
+ALTER TABLE shared_outfits
+ADD COLUMN mood_keywords TEXT NULL COMMENT '分享时的心情关键词，逗号分隔' AFTER user_age,
+ADD COLUMN weather_information VARCHAR(255) NULL COMMENT '分享时的天气信息' AFTER mood_keywords;
 */

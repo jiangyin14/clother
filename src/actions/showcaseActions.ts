@@ -4,11 +4,13 @@
 import pool from '@/lib/db';
 import { getUserFromSession } from '@/actions/userActions';
 import type { SharedOutfit } from '@/lib/definitions';
-import type { RowDataPacket, OkPacket, ResultSetHeader } from 'mysql2';
+import type { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 interface ShareOutfitData {
   outfitDescription: string;
   imageDataUri: string;
+  moodKeywords: string;      // 新增
+  weatherInformation: string; // 新增
 }
 
 export async function shareOutfitToShowcase(
@@ -19,19 +21,25 @@ export async function shareOutfitToShowcase(
     return { success: false, message: '用户未登录，无法分享穿搭。' };
   }
 
-  const { outfitDescription, imageDataUri } = data;
+  const { outfitDescription, imageDataUri, moodKeywords, weatherInformation } = data;
   if (!outfitDescription || !imageDataUri) {
     return { success: false, message: '缺少穿搭描述或图片信息。' };
   }
+  if (!moodKeywords || !weatherInformation) {
+    return { success: false, message: '缺少心情或天气信息。' };
+  }
+
 
   try {
     const [result] = await pool.query<ResultSetHeader>(
-      'INSERT INTO shared_outfits (user_id, username, user_gender, user_age, outfit_description, image_data_uri) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO shared_outfits (user_id, username, user_gender, user_age, mood_keywords, weather_information, outfit_description, image_data_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [
         user.id,
         user.username,
         user.gender || null,
         user.age || null,
+        moodKeywords,
+        weatherInformation,
         outfitDescription,
         imageDataUri,
       ]
@@ -69,7 +77,7 @@ export async function getSharedOutfits(
 
   try {
     const [outfitRows] = await pool.query<RowDataPacket[]>(
-      'SELECT id, user_id, username, user_gender, user_age, outfit_description, image_data_uri, created_at FROM shared_outfits ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      'SELECT id, user_id, username, user_gender, user_age, mood_keywords, weather_information, outfit_description, image_data_uri, created_at FROM shared_outfits ORDER BY created_at DESC LIMIT ? OFFSET ?',
       [limit, offset]
     );
 
@@ -82,6 +90,8 @@ export async function getSharedOutfits(
       username: row.username,
       user_gender: row.user_gender,
       user_age: row.user_age,
+      mood_keywords: row.mood_keywords,
+      weather_information: row.weather_information,
       outfit_description: row.outfit_description,
       image_data_uri: row.image_data_uri,
       created_at: new Date(row.created_at).toISOString(),

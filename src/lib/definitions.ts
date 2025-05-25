@@ -90,7 +90,9 @@ export interface SharedOutfit {
   username: string;
   user_gender: string | null;
   user_age: number | null;
+  mood_keywords: string | null;       // 新增
+  weather_information: string | null; // 新增
   outfit_description: string;
   image_data_uri: string;
-  created_at: string; // Or Date object, depending on how you handle it
+  created_at: string;
 }

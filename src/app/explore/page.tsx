@@ -101,7 +101,7 @@ export default function ExplorePage() {
         setOutfitRecommendation(null);
         setGeneratedImageUrl(null);
         setOutfitImagePromptDetails(null);
-        setHasShared(false); // Reset sharing status for new recommendation
+        setHasShared(false); 
     }
     setShowResults(true);
 
@@ -140,8 +140,8 @@ export default function ExplorePage() {
       toast({ title: "请先登录", description: "登录后才能分享您的穿搭哦！", variant: "default" });
       return;
     }
-    if (!outfitRecommendation || !generatedImageUrl) {
-      toast({ title: "信息不完整", description: "需要有效的穿搭描述和图片才能分享。", variant: "destructive" });
+    if (!outfitRecommendation || !generatedImageUrl || selectedMoods.length === 0 || !selectedWeather) {
+      toast({ title: "信息不完整", description: "需要有效的穿搭描述、图片、心情和天气信息才能分享。", variant: "destructive" });
       return;
     }
 
@@ -150,6 +150,8 @@ export default function ExplorePage() {
       const result = await shareOutfitToShowcase({
         outfitDescription: outfitRecommendation,
         imageDataUri: generatedImageUrl,
+        moodKeywords: selectedMoods.join(', '),
+        weatherInformation: selectedWeather,
       });
       if (result.success) {
         toast({ title: "分享成功！", description: "您的穿搭已成功分享到穿搭广场。" });
@@ -173,7 +175,7 @@ export default function ExplorePage() {
   }
 
   const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather;
-  const canShare = isLoggedIn && outfitRecommendation && generatedImageUrl && !isSharing && !hasShared;
+  const canShare = isLoggedIn && outfitRecommendation && generatedImageUrl && !isSharing && !hasShared && selectedMoods.length > 0 && !!selectedWeather;
 
 
   return (
@@ -383,7 +385,9 @@ export default function ExplorePage() {
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12 mb-3 text-primary/70" />
                 <p className="font-semibold text-lg md:text-xl">准备好探索你的新造型了吗？</p>
-                <p className="text-sm sm:text-base">从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
+                <p className="text-sm sm:text-base">
+                  从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！
+                </p>
               </CardContent>
             </Card>
           )}

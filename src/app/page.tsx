@@ -14,7 +14,7 @@ import CreativitySlider from '@/components/CreativitySlider';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, Sparkles, Image as ImageIcon, Lightbulb, Share2, CheckCircle2 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { getUserFromSession } from '@/actions/userActions';
 import { cn } from '@/lib/utils';
 
@@ -58,7 +58,7 @@ export default function RecommendationPage() {
     setRecommendation(null);
     setOutfitImagePromptDetails(null);
     setGeneratedImageUrl(null);
-    setHasShared(false); // Reset sharing status for new recommendation
+    setHasShared(false); 
 
     const moodKeywordsString = selectedMoods.join(', ');
 
@@ -98,8 +98,6 @@ export default function RecommendationPage() {
         try {
           const imageResult = await handleGenerateOutfitImageAction(outfitImagePromptDetails);
           setGeneratedImageUrl(imageResult.imageDataUri);
-          // Toast for image generation can be optional if the main recommendation toast is enough
-          // toast({ title: "图片已生成！", description: "看看AI渲染的效果图。" });
         } catch (error) {
           toast({
             title: '生成图片失败',
@@ -120,8 +118,8 @@ export default function RecommendationPage() {
       toast({ title: "请先登录", description: "登录后才能分享您的穿搭哦！", variant: "default" });
       return;
     }
-    if (!recommendation || !generatedImageUrl) {
-      toast({ title: "信息不完整", description: "需要有效的穿搭描述和图片才能分享。", variant: "destructive" });
+    if (!recommendation || !generatedImageUrl || selectedMoods.length === 0 || !selectedWeather) {
+      toast({ title: "信息不完整", description: "需要有效的穿搭描述、图片、心情和天气信息才能分享。", variant: "destructive" });
       return;
     }
 
@@ -130,6 +128,8 @@ export default function RecommendationPage() {
       const result = await shareOutfitToShowcase({
         outfitDescription: recommendation,
         imageDataUri: generatedImageUrl,
+        moodKeywords: selectedMoods.join(', '),
+        weatherInformation: selectedWeather,
       });
       if (result.success) {
         toast({ title: "分享成功！", description: "您的穿搭已成功分享到穿搭广场。" });
@@ -154,7 +154,7 @@ export default function RecommendationPage() {
   }
 
   const canGetRecommendation = selectedMoods.length > 0 && !!selectedWeather;
-  const canShare = isLoggedIn && recommendation && generatedImageUrl && !isSharing && !hasShared;
+  const canShare = isLoggedIn && recommendation && generatedImageUrl && !isSharing && !hasShared && selectedMoods.length > 0 && !!selectedWeather;
 
   return (
     <div className="container mx-auto font-sans">
