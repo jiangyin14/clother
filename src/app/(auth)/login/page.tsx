@@ -13,6 +13,7 @@ import { useSearchParams } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LogIn } from 'lucide-react';
 import CaptchaWidget from '@/components/CaptchaWidget';
+import {red} from "next/dist/lib/picocolors";
 
 function LoginButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
@@ -47,7 +48,15 @@ export default function LoginPage() {
          <LogIn className="h-12 w-12 text-primary" />
         </div>
         <CardTitle className="text-2xl">欢迎回来！</CardTitle>
-        <CardDescription className="text-sm sm:text-base text-muted-foreground">请输入您的用户名和密码以登录 Clother (衣者)。</CardDescription>
+        <CardDescription className="text-sm sm:text-base text-muted-foreground">
+          请输入您的用户名和密码以登录 Clother (衣者)。<br></br>
+          <br></br>
+          Moonshot48 成都场路演试运行中！
+          <br></br>
+          欢迎使用<a style={{color: "purple"}}>示例用户（参看登录框提示）</a>体验功能，也可以注册您自己的账号。<br></br>
+          <br></br>
+          <p style={{color: "red"}}>出现任何卡顿/人机验证问题，请先试试刷新页面。</p>
+        </CardDescription>
       </CardHeader>
       <form action={dispatch}>
         <CardContent className="space-y-4">
@@ -63,12 +72,12 @@ export default function LoginPage() {
           )}
           <div className="space-y-2">
             <Label htmlFor="username">用户名</Label>
-            <Input id="username" name="username" type="text" placeholder="您的用户名" required />
+            <Input id="username" name="username" type="text" placeholder="测试用户：test" required />
             {state?.errors?.username && <p className="text-sm text-destructive">{state.errors.username.join(', ')}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">密码</Label>
-            <Input id="password" name="password" type="password" placeholder="••••••••" required />
+            <Input id="password" name="password" type="password" placeholder="测试密码：123456" required />
             {state?.errors?.password && <p className="text-sm text-destructive">{state.errors.password.join(', ')}</p>}
           </div>
           
