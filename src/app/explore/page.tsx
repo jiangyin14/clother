@@ -7,13 +7,15 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Sparkles, Image as ImageIcon, Wand2, RefreshCw, Search, CheckCircle2, ThumbsUp } from 'lucide-react';
+import { Loader2, Sparkles, Image as ImageIcon, Wand2, RefreshCw, Search, CheckCircle2, ThumbsUp, Share2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import MoodWeatherInput from '@/components/MoodWeatherInput';
 import CreativitySlider from '@/components/CreativitySlider';
 import { MOOD_OPTIONS, WEATHER_OPTIONS } from '@/lib/constants';
 import type { ExplorableItem } from '@/lib/definitions';
 import { handleExploreOutfitAction, handleGenerateOutfitImageAction, handleGenerateExplorableItemsAction } from '@/lib/actions';
+import { shareOutfitToShowcase } from '@/actions/showcaseActions';
+import { getUserFromSession } from '@/actions/userActions';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -23,7 +25,7 @@ export default function ExplorePage() {
   const [isLoadingExplorable, setIsLoadingExplorable] = useState(true);
   const [selectedItems, setSelectedItems] = useState<ExplorableItem[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
-  const [selectedWeather, setSelectedWeather] = useState<string>(''); 
+  const [selectedWeather, setSelectedWeather] = useState<string>('');
   const [creativityLevel, setCreativityLevel] = useState<number>(5);
   const [outfitRecommendation, setOutfitRecommendation] = useState<string | null>(null);
   const [outfitImagePromptDetails, setOutfitImagePromptDetails] = useState<string | null>(null);
@@ -32,11 +34,19 @@ export default function ExplorePage() {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [clientLoaded, setClientLoaded] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [hasShared, setHasShared] = useState(false);
 
   const { toast } = useToast();
 
   useEffect(() => {
     setClientLoaded(true);
+    const checkLogin = async () => {
+      const user = await getUserFromSession();
+      setIsLoggedIn(!!user);
+    };
+    checkLogin();
   }, []);
 
   const fetchExplorableItems = useCallback(async () => {
@@ -44,7 +54,7 @@ export default function ExplorePage() {
     try {
       const items = await handleGenerateExplorableItemsAction(12);
       setExplorableItems(items);
-      setSelectedItems([]); 
+      setSelectedItems([]);
     } catch (error) {
       toast({
         title: "获取探索元素失败",
@@ -86,11 +96,12 @@ export default function ExplorePage() {
     }
 
     setIsLoadingRecommendation(true);
-    setIsLoadingImage(true); 
-    if (!isRefresh) { 
+    setIsLoadingImage(true);
+    if (!isRefresh) {
         setOutfitRecommendation(null);
         setGeneratedImageUrl(null);
         setOutfitImagePromptDetails(null);
+        setHasShared(false); // Reset sharing status for new recommendation
     }
     setShowResults(true);
 
@@ -101,17 +112,14 @@ export default function ExplorePage() {
       const result = await handleExploreOutfitAction(selectedItemNames, moodKeywordsString, selectedWeather, creativityLevel);
       setOutfitRecommendation(result.description);
       setOutfitImagePromptDetails(result.imagePromptDetails);
-      if (!isRefresh) {
-        toast({ title: "探索建议已生成！", description: "看看这个新搭配想法。" });
-      } else {
-        toast({ title: "已为你“换”一批新的建议！", description: "看看这个新搭配想法。" });
-      }
-      
+      const messageTitle = isRefresh ? "已为你“换”一批新的建议！" : "探索建议已生成！";
+      toast({ title: messageTitle, description: "看看这个新搭配想法。" });
+
       if (result.imagePromptDetails) {
         const imageResult = await handleGenerateOutfitImageAction(result.imagePromptDetails);
         setGeneratedImageUrl(imageResult.imageDataUri);
       } else {
-         setGeneratedImageUrl(null); 
+         setGeneratedImageUrl(null);
       }
 
     } catch (error) {
@@ -120,12 +128,41 @@ export default function ExplorePage() {
         description: error instanceof Error ? error.message : '发生未知错误。',
         variant: 'destructive',
       });
-       if (!isRefresh) setShowResults(false); 
+       if (!isRefresh) setShowResults(false);
     } finally {
       setIsLoadingRecommendation(false);
       setIsLoadingImage(false);
     }
-  }, [selectedItems, selectedMoods, selectedWeather, creativityLevel, toast]); 
+  }, [selectedItems, selectedMoods, selectedWeather, creativityLevel, toast]);
+
+  const handleShare = async () => {
+    if (!isLoggedIn) {
+      toast({ title: "请先登录", description: "登录后才能分享您的穿搭哦！", variant: "default" });
+      return;
+    }
+    if (!outfitRecommendation || !generatedImageUrl) {
+      toast({ title: "信息不完整", description: "需要有效的穿搭描述和图片才能分享。", variant: "destructive" });
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const result = await shareOutfitToShowcase({
+        outfitDescription: outfitRecommendation,
+        imageDataUri: generatedImageUrl,
+      });
+      if (result.success) {
+        toast({ title: "分享成功！", description: "您的穿搭已成功分享到穿搭广场。" });
+        setHasShared(true);
+      } else {
+        toast({ title: "分享失败", description: result.message || "无法分享您的穿搭，请稍后再试。", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "分享出错", description: error instanceof Error ? error.message : "发生未知错误。", variant: "destructive" });
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
   if (!clientLoaded) {
     return (
@@ -135,7 +172,9 @@ export default function ExplorePage() {
     );
   }
 
-  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather; 
+  const canSubmit = selectedItems.length > 0 && selectedMoods.length > 0 && !!selectedWeather;
+  const canShare = isLoggedIn && outfitRecommendation && generatedImageUrl && !isSharing && !hasShared;
+
 
   return (
     <div className="container mx-auto font-sans">
@@ -160,11 +199,11 @@ export default function ExplorePage() {
                   <CardTitle className="text-lg md:text-xl">1. 选择探索灵感</CardTitle>
                   <CardDescription className="text-sm md:text-base text-muted-foreground">勾选你想要尝试的时尚元素，激发AI的创意火花。</CardDescription>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={fetchExplorableItems} 
-                  disabled={isLoadingExplorable}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchExplorableItems}
+                  disabled={isLoadingExplorable || isLoadingRecommendation || isLoadingImage}
                   className="rounded-lg text-sm"
                 >
                   {isLoadingExplorable ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
@@ -189,8 +228,8 @@ export default function ExplorePage() {
                   {explorableItems.map(item => {
                     const isSelected = selectedItems.some(si => si.id === item.id);
                     return (
-                      <Card 
-                        key={item.id} 
+                      <Card
+                        key={item.id}
                         className={cn(
                           "cursor-pointer hover:shadow-xl transition-all duration-200 ease-in-out flex flex-col rounded-lg overflow-hidden",
                           isSelected ? "border-primary ring-2 ring-primary shadow-lg" : "border-border"
@@ -207,9 +246,9 @@ export default function ExplorePage() {
                           <p className="line-clamp-3">{item.description}</p>
                         </CardContent>
                         <CardFooter className="p-3 pt-2 mt-auto border-t">
-                           <Button 
-                              variant={isSelected ? "default" : "outline"} 
-                              size="sm" 
+                           <Button
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
                               className="w-full text-sm rounded-md"
                               onClick={(e) => { e.stopPropagation(); handleItemSelection(item); }}
                             >
@@ -236,16 +275,16 @@ export default function ExplorePage() {
             weatherOptions={WEATHER_OPTIONS}
             moodOptions={MOOD_OPTIONS}
           />
-          
+
           <CreativitySlider
             value={creativityLevel}
             onValueChange={setCreativityLevel}
             disabled={isLoadingRecommendation || isLoadingImage}
           />
-                    
+
           <Card className="shadow-lg rounded-xl">
             <CardHeader>
-              <CardTitle className="text-lg md:text-xl">生成搭配</CardTitle> 
+              <CardTitle className="text-lg md:text-xl">生成搭配</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
@@ -318,16 +357,32 @@ export default function ExplorePage() {
                       />
                     )}
                   </CardContent>
+                  {canShare && (
+                    <CardFooter className="p-4 border-t">
+                       <Button onClick={handleShare} disabled={isSharing} className="w-full text-base" variant="outline">
+                        {isSharing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
+                        {isSharing ? "分享中..." : "分享到穿搭广场"}
+                      </Button>
+                    </CardFooter>
+                  )}
+                  {hasShared && (
+                    <CardFooter className="p-4 border-t justify-center">
+                        <div className="flex items-center text-green-600">
+                            <CheckCircle2 className="mr-2 h-5 w-5" />
+                            <p className="text-sm font-medium">已成功分享！</p>
+                        </div>
+                    </CardFooter>
+                  )}
                 </Card>
               )}
             </div>
           )}
-          
+
           {!showResults && !isLoadingExplorable && !isLoadingRecommendation && !isLoadingImage && explorableItems.length > 0 && (
              <Card className="border-dashed border-primary/30 rounded-xl bg-primary/5">
               <CardContent className="pt-8 pb-8 text-center text-muted-foreground">
                 <Wand2 className="mx-auto h-12 w-12 mb-3 text-primary/70" />
-                <p className="font-semibold text-lg">准备好探索你的新造型了吗？</p>
+                <p className="font-semibold text-lg md:text-xl">准备好探索你的新造型了吗？</p>
                 <p className="text-sm sm:text-base">从上方选择一些灵感元素，设定好场景和创意偏好，AI 将为你呈现惊喜！</p>
               </CardContent>
             </Card>

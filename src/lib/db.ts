@@ -27,12 +27,12 @@ CREATE TABLE IF NOT EXISTS users (
     style_preferences JSON NULL,
     skin_tone VARCHAR(50) NULL,                 -- 肤色
     weight INT UNSIGNED NULL,                   -- 体重 (kg)
-    height INT UNSIGNED NULL,                   -- 新增：身高 (cm)
+    height INT UNSIGNED NULL,                   -- 身高 (cm)
     oobe_completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Clothing Items Table DDL (No change needed for this feature, but ensure it exists)
+-- Clothing Items Table DDL
 CREATE TABLE IF NOT EXISTS clothing_items (
     id VARCHAR(255) PRIMARY KEY,
     user_id INT NOT NULL,
@@ -44,8 +44,23 @@ CREATE TABLE IF NOT EXISTS clothing_items (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Optional: Indexes (add if not already present from previous steps)
+-- Shared Outfits Table DDL (New table for Showcase)
+CREATE TABLE IF NOT EXISTS shared_outfits (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    username VARCHAR(255) NOT NULL,             -- Denormalized for easy display
+    user_gender VARCHAR(30) NULL,               -- Denormalized
+    user_age INT UNSIGNED NULL,                 -- Denormalized
+    outfit_description TEXT NOT NULL,
+    image_data_uri LONGTEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Optional: Indexes
 CREATE INDEX IF NOT EXISTS idx_user_id_clothing ON clothing_items (user_id);
+CREATE INDEX IF NOT EXISTS idx_shared_outfits_created_at ON shared_outfits (created_at);
+CREATE INDEX IF NOT EXISTS idx_shared_outfits_user_id ON shared_outfits (user_id);
 
 */
 
@@ -57,7 +72,6 @@ ADD COLUMN age INT UNSIGNED NULL AFTER gender,
 ADD COLUMN style_preferences JSON NULL AFTER age,
 ADD COLUMN skin_tone VARCHAR(50) NULL AFTER style_preferences,
 ADD COLUMN weight INT UNSIGNED NULL AFTER skin_tone,
-ADD COLUMN height INT UNSIGNED NULL AFTER weight, -- 新增身高字段
-ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER height; -- 调整oobe_completed位置
+ADD COLUMN height INT UNSIGNED NULL AFTER weight,
+ADD COLUMN oobe_completed BOOLEAN DEFAULT FALSE AFTER height;
 */
-

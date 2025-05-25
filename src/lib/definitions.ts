@@ -5,20 +5,20 @@ export interface User {
   gender?: string | null;
   age?: number | null;
   style_preferences?: string[] | null;
-  skinTone?: string | null; 
-  weight?: number | null;   
-  height?: number | null; // 新增：身高 (cm)
+  skinTone?: string | null;
+  weight?: number | null;
+  height?: number | null;
   oobe_completed?: boolean;
 }
 
 export interface ClothingItem {
-  id: string; 
+  id: string;
   name: string;
-  imageUrl: string; 
+  imageUrl: string;
   attributes: string[];
   isDefault?: boolean;
-  user_id?: number; 
-  created_at?: string; 
+  user_id?: number;
+  created_at?: string;
 }
 
 export interface WeatherOption {
@@ -30,14 +30,14 @@ export interface WeatherOption {
 export interface MoodOption {
   value: string;
   label: string;
-  icon?: React.ElementType; 
+  icon?: React.ElementType;
 }
 
 export interface ExplorableItem {
   id: string;
   name: string;
   description: string;
-  category: string; 
+  category: string;
 }
 
 export type AuthFormState = {
@@ -45,10 +45,11 @@ export type AuthFormState = {
   errors?: {
     username?: string[];
     password?: string[];
-    confirmPassword?: string[]; 
+    confirmPassword?: string[];
     captchaToken?: string[];
   };
   success?: boolean;
+  oobe_completed?: boolean; // Added for login success state
 };
 
 export type ProfileFormState = {
@@ -57,13 +58,13 @@ export type ProfileFormState = {
     gender?: string[];
     age?: string[];
     stylePreferences?: string[];
-    skinTone?: string[]; 
-    weight?: string[];   
-    height?: string[]; // 新增
-    general?: string[]; 
+    skinTone?: string[];
+    weight?: string[];
+    height?: string[];
+    general?: string[];
   };
   success?: boolean;
-  user?: User | null; 
+  user?: User | null;
 };
 
 export interface GenderOption {
@@ -79,6 +80,17 @@ export interface StylePreferenceOption {
 // AI Flow related types
 export interface RecommendClothingOutput {
   recommendedOutfit: string;
-  imagePromptDetails?: string; 
+  imagePromptDetails?: string;
+  error?: string; // Added to handle cases like empty closet
 }
 
+export interface SharedOutfit {
+  id: number;
+  user_id: number;
+  username: string;
+  user_gender: string | null;
+  user_age: number | null;
+  outfit_description: string;
+  image_data_uri: string;
+  created_at: string; // Or Date object, depending on how you handle it
+}
