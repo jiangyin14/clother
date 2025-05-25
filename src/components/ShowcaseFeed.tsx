@@ -10,6 +10,7 @@ import { Loader2, AlertCircle, ChevronLeft, ChevronRight, PlusCircle } from 'luc
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import {Card, CardContent, CardFooter, CardHeader} from "@/components/ui/card";
 
 const ITEMS_PER_PAGE = 12;
 
